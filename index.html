@@ -1,0 +1,1926 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Paper Note</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='2.5' width='16' height='19' rx='2.5' fill='%23fff' stroke='%2323272c' stroke-width='1.6'/%3E%3Crect x='6.4' y='8.9' width='11.2' height='3.6' rx='1' fill='%23ffd43b'/%3E%3Cpath d='M7.5 6.8h9M7.5 10.7h9M7.5 14.6h9M7.5 18.2h5.5' stroke='%2323272c' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --desk: #4b5159;
+  --sheet: #fcfcfa;
+  --sheet-2: #f1f1ed;
+  --bar: #f6f6f3;
+  --line: #e2e2dc;
+  --line-strong: #d3d3cc;
+  --ink: #23272c;
+  --ink-2: #5d646d;
+  --ink-3: #8a9099;
+  --marker: #ffd43b;
+  --marker-edge: #e6b800;
+  --marker-ink: #3b3000;
+  --hl: rgba(255, 212, 59, .45);
+  --link: #2756a8;
+  --focus: #2756a8;
+  --flash-bg: rgba(255, 212, 59, .28);
+  --toast-bg: #2a2e34;
+  --toast-ink: #f4f5f6;
+  --sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --serif: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong", "SimSun", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --desk: #2c3036;
+    --sheet: #1c1f23;
+    --sheet-2: #262a30;
+    --bar: #202328;
+    --line: #31363d;
+    --line-strong: #3d434b;
+    --ink: #e8e9eb;
+    --ink-2: #acb2ba;
+    --ink-3: #7f868f;
+    --link: #8fb2f2;
+    --focus: #8fb2f2;
+    --flash-bg: rgba(255, 212, 59, .16);
+    --toast-bg: #3a3f47;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex; flex-direction: column; overflow: hidden;
+  font: 14px/1.6 var(--sans); color: var(--ink); background: var(--sheet);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.ico { display: inline-flex; width: 16px; height: 16px; flex: none; }
+.ico svg { width: 100%; height: 100%; }
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  flex: none; height: 52px; display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; background: var(--bar); border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 8px; margin-right: 8px; font-weight: 650; letter-spacing: .01em; white-space: nowrap; }
+.brand svg { width: 24px; height: 24px; }
+.doc-name { flex: 1; min-width: 0; text-align: center; color: var(--ink-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 7px;
+  background: var(--sheet); font-size: 13px; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: var(--sheet-2); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
+.btn.primary:hover:not(:disabled) { background: var(--ink); opacity: .88; }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover:not(:disabled) { background: var(--sheet-2); }
+.btn[aria-pressed="true"] { background: var(--marker); border-color: var(--marker-edge); color: var(--marker-ink); }
+.btn[aria-pressed="true"]:hover:not(:disabled) { background: var(--marker); }
+.btn.danger { color: #c2412f; }
+#btnFit[aria-pressed="true"] { background: var(--sheet-2); border-color: var(--line-strong); color: var(--ink); }
+.icon-btn {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border: 1px solid var(--line-strong); border-radius: 7px; background: var(--sheet);
+}
+.icon-btn:hover:not(:disabled) { background: var(--sheet-2); }
+.icon-btn:disabled { opacity: .45; cursor: default; }
+
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; min-width: 264px; padding: 6px;
+  background: var(--sheet); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .2);
+}
+.menu button {
+  display: flex; flex-direction: column; align-items: flex-start; width: 100%;
+  padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; text-align: left;
+}
+.menu button:hover, .menu button:focus-visible { background: var(--sheet-2); outline: none; }
+.menu small { color: var(--ink-3); font-size: 12px; }
+.menu hr { margin: 6px 4px; border: 0; border-top: 1px solid var(--line); }
+
+/* ---------- 工作区 ---------- */
+.workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, var(--split, 58%)) 7px minmax(0, 1fr); }
+.workspace.resizing { cursor: col-resize; user-select: none; }
+.workspace.resizing .pdf-scroller, .workspace.resizing .notes-scroller { pointer-events: none; }
+.pane { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.pane-bar {
+  flex: none; height: 46px; display: flex; align-items: center; gap: 10px;
+  padding: 0 12px; background: var(--bar); border-bottom: 1px solid var(--line);
+}
+.pdf-pane .pane-bar { justify-content: space-between; }
+.group { display: flex; align-items: center; gap: 6px; }
+.zoom-label { min-width: 48px; text-align: center; color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pager { color: var(--ink-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pager input {
+  width: 46px; height: 30px; padding: 0 4px; text-align: center;
+  border: 1px solid var(--line-strong); border-radius: 6px; background: var(--sheet);
+}
+.divider { position: relative; background: var(--line); cursor: col-resize; touch-action: none; }
+.divider::after {
+  content: ""; position: absolute; top: 50%; left: 2px; width: 3px; height: 40px; margin-top: -20px;
+  border-radius: 2px; background: var(--ink-3); opacity: .55;
+}
+.divider:hover, .divider:focus-visible, .workspace.resizing .divider { background: var(--focus); outline: none; }
+
+/* ---------- PDF ---------- */
+.pdf-scroller {
+  position: relative; flex: 1; overflow: auto; background: var(--desk);
+  scrollbar-gutter: stable; overscroll-behavior: contain;
+}
+.pages { padding: 20px; min-width: fit-content; }
+.page {
+  position: relative; margin: 0 auto 18px; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .28), 0 8px 24px rgba(0, 0, 0, .2);
+}
+.canvas-wrap, .canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hl-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: multiply; }
+.hl { position: absolute; border-radius: 2px; background: var(--hl); transition: background .5s, box-shadow .5s, opacity .2s; }
+.hide-hl .hl:not(.flash) { opacity: 0; }
+.hl.flash { background: rgba(255, 196, 0, .85); box-shadow: 0 0 0 3px rgba(255, 196, 0, .45); }
+.flash-box {
+  position: absolute; border: 2px solid var(--marker-edge); border-radius: 3px;
+  background: rgba(255, 212, 59, .2); transition: opacity .5s;
+}
+.flash-box.out { opacity: 0; }
+
+/* pdf.js 文字层（取自 pdf.js 3.11 的 pdf_viewer.css） */
+.textLayer {
+  position: absolute; text-align: initial; inset: 0; overflow: hidden; opacity: 1; line-height: 1;
+  -webkit-text-size-adjust: none; text-size-adjust: none; forced-color-adjust: none;
+  transform-origin: 0 0; z-index: 2;
+}
+.textLayer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; }
+.textLayer span.markedContent { top: 0; height: 0; }
+.textLayer ::selection { background: rgba(39, 86, 168, .3); }
+.textLayer br::selection { background: transparent; }
+.textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: -1; cursor: default; user-select: none; -webkit-user-select: none; }
+.textLayer .endOfContent.active { top: 0; }
+
+.capturing .page { cursor: crosshair; }
+.capturing .textLayer { pointer-events: none; }
+.cap-box { position: absolute; z-index: 5; border: 2px solid var(--marker-edge); background: rgba(255, 212, 59, .18); pointer-events: none; }
+.capture-hint, .pdf-loading {
+  position: absolute; left: 50%; top: 58px; z-index: 8; transform: translateX(-50%);
+  padding: 7px 14px; border-radius: 8px; font-size: 13px; white-space: nowrap;
+  background: var(--toast-bg); color: var(--toast-ink); box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+}
+.capture-hint { background: var(--marker); color: var(--marker-ink); }
+
+.pdf-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+.drop-card {
+  width: min(440px, 100%); padding: 40px 28px 30px; text-align: center; color: #eceef1;
+  border: 1.5px dashed rgba(255, 255, 255, .34); border-radius: 16px;
+}
+.drop-card svg { width: 56px; height: 56px; margin-bottom: 10px; }
+.drop-card h2 { margin: 0 0 4px; font: 600 20px/1.4 var(--serif); }
+.drop-card p { margin: 0 0 14px; color: rgba(236, 238, 241, .72); }
+.drop-card .btn.primary { background: #fff; border-color: #fff; color: #23272c; height: 36px; padding: 0 18px; }
+.drop-card .drop-note { margin: 18px 0 0; font-size: 12px; color: rgba(236, 238, 241, .58); }
+.linklike { margin-top: 10px; border: 0; background: transparent; color: #cfe0ff; text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
+.pdf-pane.dragover .drop-card { border-color: var(--marker); background: rgba(255, 212, 59, .08); }
+.pdf-pane.dragover .pdf-scroller { box-shadow: inset 0 0 0 3px var(--marker); }
+
+.quote-fab {
+  position: fixed; z-index: 50; display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px 0 11px; border: 1px solid var(--marker-edge); border-radius: 17px;
+  background: var(--marker); color: var(--marker-ink); font-size: 13px; font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+}
+.quote-fab:hover { filter: brightness(1.04); }
+
+/* ---------- 笔记 ---------- */
+.notes-pane { background: var(--sheet); }
+.notes-title {
+  flex: 1; min-width: 0; height: 34px; padding: 0 6px; border: 0; border-radius: 6px;
+  background: transparent; font: 600 15px/1.3 var(--serif);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.notes-title:hover:not(:disabled), .notes-title:focus { background: var(--sheet-2); outline: none; }
+.notes-title:disabled { opacity: .5; }
+.save-state { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+.save-state.is-error { color: #c2412f; }
+.notes-scroller { position: relative; flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.notes-pane.drop-ready .notes-scroller { box-shadow: inset 0 0 0 2px var(--marker); }
+.notes-list { position: relative; max-width: 720px; margin: 0 auto; padding: 26px 46px 6px; }
+
+.blk { position: relative; margin: 0 0 16px; border-radius: 4px; transition: background .6s, box-shadow .6s; }
+.blk.flash { background: var(--flash-bg); box-shadow: 0 0 0 8px var(--flash-bg); }
+.blk.dragging { opacity: .35; }
+.blk::before {
+  content: ""; position: absolute; left: -10px; top: 4px; bottom: 4px; width: 2px;
+  border-radius: 2px; background: transparent;
+}
+.blk.is-active::before { background: var(--line-strong); }
+.blk:focus-within::before { background: var(--focus); }
+.blk-handle, .blk-del {
+  position: absolute; top: 0; display: grid; place-items: center; width: 26px; height: 28px; padding: 0;
+  border: 0; border-radius: 6px; background: transparent; color: var(--ink-3); opacity: 0;
+}
+.blk-handle { left: -40px; cursor: grab; }
+.blk-del { right: -38px; }
+.blk:hover .blk-handle, .blk:hover .blk-del, .blk:focus-within .blk-handle, .blk:focus-within .blk-del,
+.blk-handle:focus-visible, .blk-del:focus-visible { opacity: 1; }
+.blk-handle:hover { background: var(--sheet-2); color: var(--ink); }
+.blk-del:hover { background: var(--sheet-2); color: #c2412f; }
+@media (hover: none) { .blk-handle, .blk-del { opacity: .6; } }
+
+.blk textarea {
+  display: block; width: 100%; resize: none; overflow: hidden; border: 0; padding: 0;
+  background: transparent; outline: none;
+}
+.blk textarea::placeholder, .f-cap::placeholder { color: var(--ink-3); }
+.f-text { font: 15px/1.75 var(--sans); min-height: 26px; }
+.quote { border-left: 4px solid var(--marker); padding: 1px 0 1px 16px; }
+.f-quote { font: 15.5px/1.85 var(--serif); color: var(--ink); }
+.quote-foot { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.src {
+  display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 6px; margin-left: -6px;
+  border: 0; border-radius: 5px; background: transparent; color: var(--link); font-size: 12.5px; white-space: nowrap;
+}
+.src:hover { background: var(--sheet-2); }
+.src .ico { width: 12px; height: 12px; }
+.f-note { margin-top: 6px; padding-top: 7px !important; border-top: 1px dashed var(--line-strong) !important; font: 14.5px/1.7 var(--sans); }
+.figure { margin: 0; }
+.figure img {
+  display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px;
+  background: #fff; cursor: zoom-in;
+}
+.figure figcaption { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.f-cap { flex: 1; min-width: 0; padding: 3px 0; border: 0; background: transparent; outline: none; font-size: 13px; color: var(--ink-2); }
+.drop-line { position: absolute; left: 46px; right: 46px; height: 3px; border-radius: 2px; background: var(--focus); pointer-events: none; }
+.add-tail {
+  display: block; width: calc(100% - 92px); max-width: 628px; margin: 0 auto 30vh; padding: 10px 0;
+  border: 0; background: transparent; color: var(--ink-3); text-align: left;
+}
+.add-tail:hover { color: var(--ink-2); }
+
+.notes-empty { max-width: 460px; margin: 0 auto; padding: 56px 32px; color: var(--ink-2); }
+.notes-empty h3 { margin: 0 0 18px; font: 600 18px/1.4 var(--serif); color: var(--ink); }
+.ways { list-style: none; margin: 0 0 26px; padding: 0; display: grid; gap: 16px; }
+.ways li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.way-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--sheet-2); color: var(--ink-2); }
+.way-ico.is-quote { background: var(--marker); color: var(--marker-ink); }
+.ways strong { display: block; color: var(--ink); font-weight: 600; }
+.ways span { font-size: 13px; }
+kbd { padding: 0 4px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; font: 12px/1.5 var(--sans); }
+
+/* ---------- 弹层 ---------- */
+.toasts {
+  position: fixed; left: 50%; bottom: 22px; z-index: 100; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none;
+}
+.toast {
+  display: flex; align-items: center; gap: 14px; max-width: min(560px, calc(100vw - 32px));
+  padding: 9px 14px; border-radius: 9px; background: var(--toast-bg); color: var(--toast-ink);
+  font-size: 13px; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); pointer-events: auto; transition: opacity .25s;
+}
+.toast.is-error { background: #a8321f; }
+.toast button { padding: 0; border: 0; background: transparent; color: var(--marker); font-weight: 600; }
+.toast.out { opacity: 0; }
+
+dialog {
+  width: min(560px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 12px;
+  background: var(--sheet); color: var(--ink); box-shadow: 0 24px 64px rgba(0, 0, 0, .35);
+}
+dialog::backdrop { background: rgba(18, 20, 24, .5); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 16px 4px 22px; }
+.modal-head h2 { margin: 0; font: 600 18px/1.3 var(--serif); }
+.modal-sub { margin: 0 22px 10px; font-size: 13px; color: var(--ink-2); }
+.lib-list { list-style: none; margin: 0; padding: 0 10px 14px; max-height: 60vh; overflow: auto; }
+.lib-item { display: flex; align-items: center; gap: 6px; border-radius: 8px; }
+.lib-item:hover { background: var(--sheet-2); }
+.lib-open { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; text-align: left; }
+.lib-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-item.is-current .lib-title::after { content: "正在阅读"; margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: var(--marker); color: var(--marker-ink); font-size: 11px; font-weight: 600; vertical-align: 1px; }
+.lib-meta { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-empty { margin: 8px 22px 22px; color: var(--ink-2); }
+.lightbox { width: auto; max-width: 94vw; background: transparent; box-shadow: none; overflow: visible; }
+.lightbox img { display: block; max-width: 94vw; max-height: 90vh; border-radius: 6px; background: #fff; cursor: zoom-out; }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .divider { display: none; }
+  .notes-pane { border-top: 1px solid var(--line-strong); }
+  .brand span, .doc-name, .hide-narrow { display: none; }
+  .topbar { gap: 8px; }
+  .topbar .doc-spacer { flex: 1; }
+  .pane-bar { gap: 6px; padding: 0 8px; overflow-x: auto; }
+  .notes-list { padding: 18px 40px 6px; }
+  .blk-handle { left: -34px; }
+  .blk-del { right: -34px; }
+}
+@media (min-width: 761px) { .doc-spacer { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="2.5" width="16" height="19" rx="2.5" fill="var(--sheet)" stroke="currentColor" stroke-width="1.5"/>
+      <rect x="6.4" y="8.9" width="11.2" height="3.6" rx="1" fill="var(--marker)"/>
+      <path d="M7.5 6.8h9M7.5 10.7h9M7.5 14.6h9M7.5 18.2h5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <span>Paper Note</span>
+  </div>
+  <button class="btn primary" id="btnOpen" type="button">打开 PDF</button>
+  <button class="btn" id="btnLibrary" type="button">论文库</button>
+  <div class="doc-name" id="docName"></div>
+  <div class="doc-spacer"></div>
+  <div class="menu-wrap">
+    <button class="btn" id="btnExport" type="button" aria-haspopup="true" aria-expanded="false" disabled>导出笔记</button>
+    <div class="menu" id="exportMenu" role="menu" hidden>
+      <button type="button" role="menuitem" data-export="md">Markdown 文件<small>图片直接嵌在 .md 里，单个文件</small></button>
+      <button type="button" role="menuitem" data-export="zip">Markdown + 图片文件夹<small>.zip，适合 Obsidian、Typora</small></button>
+      <button type="button" role="menuitem" data-export="html">网页文件<small>用浏览器打开后可打印成 PDF</small></button>
+      <hr>
+      <button type="button" role="menuitem" data-export="json">备份笔记<small>.json，可在其他电脑上导入</small></button>
+      <button type="button" role="menuitem" data-export="import">从备份导入<small>追加到当前笔记末尾</small></button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+  <input type="file" id="jsonInput" accept="application/json,.json" hidden>
+</header>
+
+<main class="workspace" id="workspace">
+  <section class="pane pdf-pane" id="pdfPane" aria-label="论文">
+    <div class="pane-bar">
+      <div class="group">
+        <button class="icon-btn" id="zoomOut" type="button" title="缩小" aria-label="缩小" disabled>
+          <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9"/></svg></span>
+        </button>
+        <span class="zoom-label" id="zoomLabel" aria-live="polite">100%</span>
+        <button class="icon-btn" id="zoomIn" type="button" title="放大" aria-label="放大" disabled>
+          <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></span>
+        </button>
+        <button class="btn ghost hide-narrow" id="btnFit" type="button" aria-pressed="false" disabled>适合宽度</button>
+      </div>
+      <div class="group pager">
+        <input id="pageInput" type="text" inputmode="numeric" aria-label="页码" disabled>
+        <span>/ <span id="pageCount">0</span></span>
+      </div>
+      <div class="group">
+        <button class="btn ghost hide-narrow" id="btnHl" type="button" aria-pressed="true" title="显示或隐藏引用过的段落" disabled>高亮</button>
+        <button class="btn" id="btnCapture" type="button" aria-pressed="false" title="在论文上框选一块区域，存为图片笔记" disabled>
+          <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10M1.5 4.5h10v10"/></svg></span>
+          框选截图
+        </button>
+      </div>
+    </div>
+    <div class="pdf-scroller" id="pdfScroller">
+      <div class="pages" id="pages"></div>
+      <div class="pdf-empty" id="pdfEmpty">
+        <div class="drop-card">
+          <svg viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <rect x="11" y="5" width="34" height="46" rx="4" stroke="currentColor" stroke-width="2"/>
+            <rect x="15" y="20" width="26" height="7" rx="1.5" fill="#ffd43b"/>
+            <path d="M17 14h22M17 23.5h22M17 33h22M17 41h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h2>把论文 PDF 拖到这里</h2>
+          <p>或者</p>
+          <button class="btn primary" id="btnOpen2" type="button">选择 PDF 文件</button>
+          <p class="drop-note">文件只在你的浏览器里处理，不会上传到任何服务器。</p>
+          <button class="linklike" id="libHint" type="button" hidden></button>
+        </div>
+      </div>
+    </div>
+    <div class="capture-hint" id="captureHint" hidden>在页面上拖出一个框，松开就会存为图片笔记。按 Esc 取消。</div>
+    <div class="pdf-loading" id="pdfLoading" hidden>正在打开…</div>
+  </section>
+
+  <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="拖动调整左右宽度" tabindex="0"></div>
+
+  <section class="pane notes-pane" id="notesPane" aria-label="笔记">
+    <div class="pane-bar">
+      <input class="notes-title" id="notesTitle" placeholder="论文标题" aria-label="笔记标题" disabled>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+      <button class="btn" id="btnAddText" type="button" title="新建一段文字（在文字框里按 Ctrl/⌘ + Enter 也可以）" disabled>
+        <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg></span>
+        文字
+      </button>
+    </div>
+    <div class="notes-scroller" id="notesScroller">
+      <div class="notes-list" id="notesList"></div>
+      <button class="add-tail" id="addTail" type="button" hidden>点击这里继续写…</button>
+      <div class="notes-empty" id="notesEmpty">
+        <p id="emptyNoPaper">打开一篇论文后，就可以在这里记笔记。笔记会自动保存在这个浏览器里，下次打开同一个 PDF 时自动恢复。</p>
+        <div id="emptyPaper" hidden>
+          <h3>笔记可以这样添加</h3>
+          <ul class="ways">
+            <li>
+              <span class="way-ico is-quote"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 9.6C2.5 7 3.9 5 6.3 3.9l.5.9C5.5 5.5 4.8 6.5 4.7 7.7h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H3.4c-.5 0-.9-.4-.9-.9V9.6Zm6.4 0C8.9 7 10.3 5 12.7 3.9l.5.9c-1.3.7-2 1.7-2.1 2.9h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H9.8c-.5 0-.9-.4-.9-.9V9.6Z"/></svg></span></span>
+              <div><strong>引用原文</strong><span>在左侧选中文字，点「引用到笔记」，或者把选中的文字直接拖到这里。</span></div>
+            </li>
+            <li>
+              <span class="way-ico"><span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10M1.5 4.5h10v10"/></svg></span></span>
+              <div><strong>截图</strong><span>点「框选截图」截下论文里的图表；也可以按 <kbd>Ctrl</kbd>+<kbd>V</kbd>（Mac 上 <kbd>⌘</kbd>+<kbd>V</kbd>）粘贴任意截图。</span></div>
+            </li>
+            <li>
+              <span class="way-ico"><span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5l3 3-8 8H2.5v-3l8-8Z"/></svg></span></span>
+              <div><strong>手写</strong><span>直接写下你的理解、疑问和想法。</span></div>
+            </li>
+          </ul>
+          <button class="btn primary" id="startWriting" type="button">开始写笔记</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<button class="quote-fab" id="quoteFab" type="button" hidden>
+  <span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 9.6C2.5 7 3.9 5 6.3 3.9l.5.9C5.5 5.5 4.8 6.5 4.7 7.7h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H3.4c-.5 0-.9-.4-.9-.9V9.6Zm6.4 0C8.9 7 10.3 5 12.7 3.9l.5.9c-1.3.7-2 1.7-2.1 2.9h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H9.8c-.5 0-.9-.4-.9-.9V9.6Z"/></svg></span>
+  引用到笔记
+</button>
+
+<div class="toasts" id="toasts"></div>
+
+<dialog id="libModal" aria-labelledby="libTitle">
+  <div class="modal-head">
+    <h2 id="libTitle">论文库</h2>
+    <button class="icon-btn" type="button" data-close aria-label="关闭">
+      <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></span>
+    </button>
+  </div>
+  <p class="modal-sub">论文和笔记都只保存在这个浏览器里。换电脑或清除浏览器数据前，请先用「导出笔记」备份。</p>
+  <ul class="lib-list" id="libList"></ul>
+  <p class="lib-empty" id="libEmpty" hidden>还没有保存过论文。打开一篇 PDF 就会自动加入这里。</p>
+</dialog>
+
+<dialog class="lightbox" id="lightbox" aria-label="查看图片"><img alt=""></dialog>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= 基础工具 ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const smooth = () => (reducedMotion() ? 'auto' : 'smooth');
+const PT_TO_CSS = 96 / 72;
+
+function h(tag, props, children) {
+  const el = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k === 'style') el.style.cssText = v;
+    else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (k === 'value') el.value = v;
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  if (children != null) for (const c of [].concat(children)) if (c != null && c !== false) el.append(c);
+  return el;
+}
+
+const ICONS = {
+  grip: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="6" cy="3.5" r="1.25"/><circle cx="10" cy="3.5" r="1.25"/><circle cx="6" cy="8" r="1.25"/><circle cx="10" cy="8" r="1.25"/><circle cx="6" cy="12.5" r="1.25"/><circle cx="10" cy="12.5" r="1.25"/></svg>',
+  trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 4.3h10.4M6.2 4.3V2.8h3.6v1.5M4.3 4.3l.6 8.9h6.2l.6-8.9"/></svg>',
+  jump: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h-3v9h9v-3M9.5 2.5h4v4M13.5 2.5 7.5 8.5"/></svg>',
+};
+function icon(name) { const s = document.createElement('span'); s.className = 'ico'; s.innerHTML = ICONS[name]; return s; }
+
+/* ================= 外部组件加载（pdf.js / JSZip） ================= */
+const PDFJS_VERSION = '3.11.174';
+const PDFJS_CDNS = [
+  { lib: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/`, root: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/` },
+  { lib: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/`, root: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/` },
+];
+const JSZIP_URLS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+];
+let pdfjsRoot = PDFJS_CDNS[0].root;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = resolve;
+    s.onerror = () => { s.remove(); reject(new Error('load failed: ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+let pdfjsPromise = null;
+function ensurePdfjs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsPromise) pdfjsPromise = (async () => {
+    for (const cdn of PDFJS_CDNS) {
+      try {
+        await loadScript(cdn.lib + 'pdf.min.js');
+        if (!window.pdfjsLib) continue;
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = cdn.lib + 'pdf.worker.min.js';
+        pdfjsRoot = cdn.root;
+        return window.pdfjsLib;
+      } catch (e) { /* 换下一个 CDN */ }
+    }
+    pdfjsPromise = null;
+    throw new Error('PDF 阅读组件没能加载。请检查网络连接，然后刷新页面。');
+  })();
+  return pdfjsPromise;
+}
+async function ensureJSZip() {
+  if (window.JSZip) return window.JSZip;
+  for (const url of JSZIP_URLS) {
+    try { await loadScript(url); if (window.JSZip) return window.JSZip; } catch (e) { /* next */ }
+  }
+  throw new Error('打包组件没能加载，请检查网络后重试，或改用「Markdown 文件」导出。');
+}
+
+/* ================= 本地存储（IndexedDB） ================= */
+const DB = (() => {
+  let db = null;
+  function open() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) { reject(new Error('IndexedDB unavailable')); return; }
+      let req;
+      try { req = indexedDB.open('paper-note', 1); } catch (e) { reject(e); return; }
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        if (!d.objectStoreNames.contains('papers')) d.createObjectStore('papers', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('files')) d.createObjectStore('files');
+        if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+      };
+      req.onsuccess = () => { db = req.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => reject(new Error('IndexedDB blocked'));
+    });
+  }
+  function run(store, mode, fn) {
+    return new Promise((resolve, reject) => {
+      if (!db) { reject(new Error('DB not open')); return; }
+      let tx;
+      try { tx = db.transaction(store, mode); } catch (e) { reject(e); return; }
+      let result;
+      const req = fn(tx.objectStore(store));
+      if (req) req.onsuccess = () => { result = req.result; };
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('aborted'));
+    });
+  }
+  return {
+    open,
+    get: (s, k) => run(s, 'readonly', st => st.get(k)),
+    put: (s, v, k) => run(s, 'readwrite', st => (k === undefined ? st.put(v) : st.put(v, k))),
+    del: (s, k) => run(s, 'readwrite', st => st.delete(k)),
+    all: s => run(s, 'readonly', st => st.getAll()),
+  };
+})();
+
+const prefs = {
+  get(k, d) { try { const v = localStorage.getItem('paper-note:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('paper-note:' + k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
+};
+
+/* ================= 状态与元素 ================= */
+const S = {
+  pdf: null, task: null, pendingTask: null,
+  paper: null,          // { id, fileName, title, blocks, createdAt, updatedAt, pageCount }
+  pages: [],            // 每页的渲染状态
+  scale: 1, fit: true, curPage: 0,
+  activeId: null, capture: false, showHl: true, dbOk: false, split: .58,
+};
+
+const workspace = $('#workspace');
+const pdfPane = $('#pdfPane');
+const pdfScroller = $('#pdfScroller');
+const pagesEl = $('#pages');
+const pdfEmpty = $('#pdfEmpty');
+const pdfLoading = $('#pdfLoading');
+const captureHint = $('#captureHint');
+const notesPane = $('#notesPane');
+const notesScroller = $('#notesScroller');
+const notesList = $('#notesList');
+const notesEmpty = $('#notesEmpty');
+const notesTitle = $('#notesTitle');
+const saveStateEl = $('#saveState');
+const addTail = $('#addTail');
+const quoteFab = $('#quoteFab');
+const fileInput = $('#fileInput');
+const jsonInput = $('#jsonInput');
+const pageInput = $('#pageInput');
+const pageCountEl = $('#pageCount');
+const zoomLabel = $('#zoomLabel');
+const btnCapture = $('#btnCapture');
+const btnHl = $('#btnHl');
+const btnFit = $('#btnFit');
+const btnExport = $('#btnExport');
+const exportMenu = $('#exportMenu');
+const libModal = $('#libModal');
+const lightbox = $('#lightbox');
+const dropLine = h('div', { class: 'drop-line', hidden: true });
+
+/* ================= 提示条 ================= */
+function toast(msg, opts = {}) {
+  const host = $('#toasts');
+  while (host.children.length >= 3) host.firstElementChild.remove();
+  const el = h('div', { class: 'toast' + (opts.type === 'error' ? ' is-error' : ''), role: 'status' }, h('span', { text: msg }));
+  if (opts.action) {
+    el.append(h('button', { type: 'button', onclick: () => { opts.action.fn(); el.remove(); } }, opts.action.label));
+  }
+  host.append(el);
+  const ms = opts.ms || (opts.action ? 5000 : 2800);
+  setTimeout(() => el.classList.add('out'), ms);
+  setTimeout(() => el.remove(), ms + 300);
+}
+
+/* ================= 打开 PDF ================= */
+const isPdf = f => f && (f.type === 'application/pdf' || /\.pdf$/i.test(f.name || ''));
+
+function looksLikeTitle(t) {
+  if (!t || t.length < 4 || t.length > 300) return false;
+  if (/^(untitled|microsoft word|title|paper|document|slide)/i.test(t)) return false;
+  if (/\.(docx?|tex|dvi|pdf|ps|indd)$/i.test(t)) return false;
+  if (/^[\d\s._-]+$/.test(t)) return false;
+  return true;
+}
+
+function setPdfStatus(state, msg) {
+  pdfLoading.hidden = state !== 'loading';
+  if (msg) pdfLoading.textContent = msg;
+  pdfEmpty.hidden = !!S.pdf || state === 'loading';
+}
+
+async function openPdf(blob, fileName, { fromLibrary = false } = {}) {
+  let lib;
+  try { lib = await ensurePdfjs(); } catch (e) { toast(e.message, { type: 'error', ms: 6000 }); return; }
+  setPdfStatus('loading', `正在打开「${fileName}」…`);
+
+  let data;
+  try { data = new Uint8Array(await blob.arrayBuffer()); }
+  catch (e) { setPdfStatus('idle'); toast('读取文件失败，请重新选择。', { type: 'error' }); return; }
+
+  S.pendingTask?.destroy();
+  const task = lib.getDocument({
+    data,
+    cMapUrl: pdfjsRoot + 'cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: pdfjsRoot + 'standard_fonts/',
+    isEvalSupported: false,
+  });
+  S.pendingTask = task;
+  task.onPassword = (update, reason) => {
+    const pw = prompt(reason === 2 ? '密码不正确，请重新输入：' : `「${fileName}」需要密码才能打开：`);
+    if (pw == null) task.destroy(); else update(pw);
+  };
+
+  let pdf;
+  try {
+    pdf = await task.promise;
+  } catch (e) {
+    if (S.pendingTask === task) S.pendingTask = null;
+    setPdfStatus('idle');
+    if (e && e.name === 'PasswordException') toast('没有输入密码，已取消打开。');
+    else if (!task.destroyed) toast('打不开这个文件：它可能已损坏，或者不是 PDF。', { type: 'error', ms: 5000 });
+    return;
+  }
+  if (S.pendingTask !== task) return;   // 用户又打开了别的文件
+  S.pendingTask = null;
+
+  try {
+    const vps = [];
+    for (let i = 1; i <= pdf.numPages; i++) vps.push((await pdf.getPage(i)).getViewport({ scale: 1 }));
+
+    let metaTitle = '';
+    try { metaTitle = ((await pdf.getMetadata())?.info?.Title || '').trim(); } catch (e) { /* ignore */ }
+
+    const id = (pdf.fingerprints && pdf.fingerprints[0]) || `${fileName}-${blob.size}`;
+    await flushSave();
+
+    let rec = null;
+    if (S.dbOk) { try { rec = await DB.get('papers', id); } catch (e) { /* ignore */ } }
+    const restored = rec && Array.isArray(rec.blocks) ? rec.blocks.length : 0;
+    if (!rec) {
+      rec = {
+        id, fileName,
+        title: looksLikeTitle(metaTitle) ? metaTitle : fileName.replace(/\.pdf$/i, ''),
+        blocks: [], createdAt: Date.now(), updatedAt: Date.now(),
+      };
+    }
+    if (!Array.isArray(rec.blocks)) rec.blocks = [];
+    rec.fileName = fileName;
+    rec.pageCount = pdf.numPages;
+
+    closeDoc();
+    S.task = task; S.pdf = pdf; S.paper = rec; S.activeId = null;
+
+    if (S.dbOk) {
+      try {
+        if (!fromLibrary) await DB.put('files', blob, id);
+        await DB.put('papers', rec);
+        await DB.put('kv', id, 'last');
+        setSaveState('saved');
+      } catch (e) { storageProblem(e); }
+    } else setSaveState('off');
+
+    buildPages(vps);
+    setPdfStatus('ready');
+    S.fit = true;
+    fitWidth();
+    pdfScroller.scrollTop = 0;
+    renderHeader();
+    renderNotes();
+    updateLibHint();
+    if (restored) toast(`已恢复这篇论文的 ${restored} 条笔记`);
+  } catch (e) {
+    console.error(e);
+    setPdfStatus('idle');
+    toast('打开论文时出错了：' + (e.message || e), { type: 'error', ms: 5000 });
+  }
+}
+
+function closeDoc() {
+  setCapture(false);
+  hideFab();
+  if (io) { io.disconnect(); io = null; }
+  for (const ps of S.pages) { try { ps.task?.cancel(); } catch (e) { /* ignore */ } }
+  S.pages = [];
+  pagesEl.replaceChildren();
+  if (S.task) { S.task.destroy(); S.task = null; }
+  S.pdf = null;
+  pageCountEl.textContent = '0';
+  pageInput.value = '';
+  setPdfControls(false);
+}
+
+function setPdfControls(on) {
+  for (const b of [$('#zoomOut'), $('#zoomIn'), btnFit, btnHl, btnCapture, pageInput]) b.disabled = !on;
+}
+
+/* ================= 页面渲染 ================= */
+let io = null;
+
+function buildPages(vps) {
+  pagesEl.replaceChildren();
+  S.pages = vps.map((vp, i) => {
+    const div = h('div', { class: 'page', dataset: { index: i } });
+    const canvasWrap = h('div', { class: 'canvas-wrap' });
+    const hl = h('div', { class: 'hl-layer' });
+    const text = h('div', { class: 'textLayer' });
+    div.append(canvasWrap, hl, text);
+    pagesEl.append(div);
+    return { i, vp, div, canvasWrap, hl, text, textBuilt: false, renderedScale: 0, rendering: false, task: null, visible: false };
+  });
+  applyScale();
+  io = new IntersectionObserver(entries => {
+    for (const en of entries) {
+      const ps = S.pages[+en.target.dataset.index];
+      if (!ps) continue;
+      ps.visible = en.isIntersecting;
+      if (ps.visible) renderPage(ps); else releasePage(ps);
+    }
+  }, { root: pdfScroller, rootMargin: '100% 0px' });
+  S.pages.forEach(ps => io.observe(ps.div));
+  pageCountEl.textContent = String(vps.length);
+  setPdfControls(true);
+  refreshHighlights();
+  updateCurrentPage();
+}
+
+function applyScale() {
+  for (const ps of S.pages) {
+    ps.div.style.width = `${Math.floor(ps.vp.width * S.scale)}px`;
+    ps.div.style.height = `${Math.floor(ps.vp.height * S.scale)}px`;
+    ps.div.style.setProperty('--scale-factor', S.scale);
+  }
+}
+
+async function renderPage(ps) {
+  const pdf = S.pdf;
+  if (!pdf || ps.rendering || ps.renderedScale === S.scale) return;
+  const scale = S.scale;
+  ps.rendering = true;
+  try {
+    const page = await pdf.getPage(ps.i + 1);
+    if (pdf !== S.pdf) return;
+    const vp = page.getViewport({ scale });
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const maxPixels = 16e6;
+    if (vp.width * vp.height * dpr * dpr > maxPixels) dpr = Math.sqrt(maxPixels / (vp.width * vp.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.floor(vp.width * dpr));
+    canvas.height = Math.max(1, Math.floor(vp.height * dpr));
+    ps.task = page.render({
+      canvasContext: canvas.getContext('2d', { alpha: false }),
+      viewport: vp,
+      transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
+    });
+    await ps.task.promise;
+    if (pdf !== S.pdf) return;
+    ps.canvasWrap.replaceChildren(canvas);
+    ps.renderedScale = scale;
+    if (!ps.textBuilt) { ps.textBuilt = true; buildTextLayer(ps, page); }
+  } catch (e) {
+    if (!e || e.name !== 'RenderingCancelledException') console.warn('render failed', e);
+  } finally {
+    ps.rendering = false;
+    ps.task = null;
+    if (pdf === S.pdf && ps.visible && ps.renderedScale !== S.scale) renderPage(ps);
+  }
+}
+
+async function buildTextLayer(ps, page) {
+  try {
+    const textContent = await page.getTextContent();
+    if (!S.pages.includes(ps)) return;
+    ps.text.replaceChildren();
+    const t = window.pdfjsLib.renderTextLayer({
+      textContentSource: textContent,
+      container: ps.text,
+      viewport: page.getViewport({ scale: S.scale }),
+      textDivs: [],
+    });
+    await t.promise;
+    ps.text.append(h('div', { class: 'endOfContent' }));
+  } catch (e) {
+    ps.textBuilt = false;
+    console.warn('text layer failed', e);
+  }
+}
+
+function releasePage(ps) {
+  if (ps.task) { try { ps.task.cancel(); } catch (e) { /* ignore */ } }
+  ps.canvasWrap.replaceChildren();
+  ps.renderedScale = 0;
+}
+
+let rerenderTimer = 0;
+function scheduleRerender() {
+  clearTimeout(rerenderTimer);
+  rerenderTimer = setTimeout(() => {
+    for (const ps of S.pages) {
+      if (!ps.visible) continue;
+      if (ps.task) { try { ps.task.cancel(); } catch (e) { /* ignore */ } }
+      else renderPage(ps);
+    }
+  }, 120);
+}
+
+/* ---------- 缩放与翻页 ---------- */
+function captureAnchor() {
+  const top = pdfScroller.scrollTop;
+  let ps = S.pages[0];
+  for (const p of S.pages) { if (p.div.offsetTop <= top + 1) ps = p; else break; }
+  if (!ps) return null;
+  return {
+    ps,
+    ratio: (top - ps.div.offsetTop) / ps.div.offsetHeight,
+    cx: (pdfScroller.scrollLeft + pdfScroller.clientWidth / 2) / Math.max(1, pdfScroller.scrollWidth),
+  };
+}
+function restoreAnchor(a) {
+  if (!a) return;
+  pdfScroller.scrollTop = a.ps.div.offsetTop + a.ratio * a.ps.div.offsetHeight;
+  pdfScroller.scrollLeft = a.cx * pdfScroller.scrollWidth - pdfScroller.clientWidth / 2;
+}
+function setScale(v, { keepFit = false } = {}) {
+  if (!keepFit) S.fit = false;
+  v = clamp(v, 0.3, 5);
+  btnFit.setAttribute('aria-pressed', String(S.fit));
+  if (!S.pages.length || Math.abs(v - S.scale) < 1e-3) { S.scale = S.pages.length ? S.scale : v; updateZoomLabel(); return; }
+  const a = captureAnchor();
+  S.scale = v;
+  applyScale();
+  restoreAnchor(a);
+  updateZoomLabel();
+  scheduleRerender();
+  if (!quoteFab.hidden) showFab();
+}
+function fitWidth() {
+  if (!S.pages.length) return;
+  const maxW = Math.max(...S.pages.map(p => p.vp.width));
+  const avail = pdfScroller.clientWidth - 40;
+  S.fit = true;
+  setScale(avail / maxW, { keepFit: true });
+}
+function updateZoomLabel() { zoomLabel.textContent = Math.round((S.scale / PT_TO_CSS) * 100) + '%'; }
+
+function updateCurrentPage() {
+  if (!S.pages.length) return;
+  const y = pdfScroller.scrollTop + pdfScroller.clientHeight * 0.35;
+  let cur = 0;
+  for (const ps of S.pages) { if (ps.div.offsetTop <= y) cur = ps.i; else break; }
+  S.curPage = cur;
+  if (document.activeElement !== pageInput) pageInput.value = String(cur + 1);
+}
+function goToPage(n) {
+  const ps = S.pages[clamp(n, 1, S.pages.length) - 1];
+  if (ps) pdfScroller.scrollTo({ top: ps.div.offsetTop - 12, behavior: smooth() });
+}
+
+/* ================= 选中文字 → 引用 ================= */
+function pageIndexOf(node) {
+  const el = node && (node.nodeType === 1 ? node : node.parentElement);
+  const pg = el && el.closest('.page');
+  return pg ? +pg.dataset.index : S.curPage;
+}
+
+function cleanQuote(s) {
+  const CJK = '\\u2e80-\\u2fdf\\u3000-\\u303f\\u3040-\\u30ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\uff00-\\uffef';
+  return s.replace(/\r/g, '')
+    .replace(/([A-Za-z])[-\u00ad]\n\s*([a-z])/g, '$1$2')
+    .replace(new RegExp(`([${CJK}])\\s*\\n\\s*(?=[${CJK}])`, 'g'), '$1')
+    .replace(/\s*\n\s*/g, ' ')
+    .replace(/[ \t\u00a0]{2,}/g, ' ')
+    .trim();
+}
+
+// 把选区换算成「页码 + 相对坐标」的矩形，用于在 PDF 上画高亮
+function rangeRects(range) {
+  const pageBoxes = S.pages.map(ps => ps.div.getBoundingClientRect());
+  const raw = [];
+  for (const r of range.getClientRects()) {
+    if (r.width < 1 || r.height < 1) continue;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const p = pageBoxes.findIndex(b => cx >= b.left && cx <= b.right && cy >= b.top && cy <= b.bottom);
+    if (p < 0) continue;
+    const b = pageBoxes[p];
+    if (r.height > b.height * 0.12 || r.width * r.height > b.width * b.height * 0.15) continue;
+    raw.push({ p, l: r.left - b.left, t: r.top - b.top, r: r.right - b.left, b: r.bottom - b.top, W: b.width, H: b.height });
+  }
+  raw.sort((a, b) => a.p - b.p || a.t - b.t || a.l - b.l);
+  const merged = [];
+  for (const r of raw) {
+    const hgt = r.b - r.t;
+    const m = merged.find(m => {
+      if (m.p !== r.p) return false;
+      const ov = Math.min(m.b, r.b) - Math.max(m.t, r.t);
+      return ov > 0.5 * Math.min(m.b - m.t, hgt) && r.l <= m.r + hgt * 0.9 && r.r >= m.l - hgt * 0.9;
+    });
+    if (m) { m.l = Math.min(m.l, r.l); m.r = Math.max(m.r, r.r); m.t = Math.min(m.t, r.t); m.b = Math.max(m.b, r.b); }
+    else merged.push({ ...r });
+  }
+  const f = v => Math.round(v * 1e5) / 1e5;
+  return merged.slice(0, 400).map(m => ({ p: m.p, x: f(m.l / m.W), y: f(m.t / m.H), w: f((m.r - m.l) / m.W), h: f((m.b - m.t) / m.H) }));
+}
+
+function captureSelection() {
+  const sel = getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  if (!pagesEl.contains(range.commonAncestorContainer)) return null;
+  const text = cleanQuote(sel.toString());
+  if (!text) return null;
+  const rects = rangeRects(range);
+  return { text, rects, page: rects.length ? rects[0].p : pageIndexOf(range.startContainer) };
+}
+
+function addQuote(q, index) {
+  if (!S.paper || !q) return;
+  insertBlock({ id: uid(), type: 'quote', text: q.text, note: '', page: q.page, rects: q.rects }, index);
+  toast(`已引用第 ${q.page + 1} 页`);
+}
+
+let pointerDownInPdf = false;
+function showFab() {
+  const sel = getSelection();
+  if (S.capture || !S.pdf || !sel || sel.isCollapsed || !sel.rangeCount) { hideFab(); return; }
+  const range = sel.getRangeAt(0);
+  if (!pagesEl.contains(range.commonAncestorContainer) || !sel.toString().trim()) { hideFab(); return; }
+  const rects = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0 && r.height < 160);
+  const last = rects[rects.length - 1] || range.getBoundingClientRect();
+  const first = rects[0] || last;
+  const box = pdfScroller.getBoundingClientRect();
+  if (last.bottom < box.top || first.top > box.bottom) { quoteFab.hidden = true; return; }
+  quoteFab.hidden = false;
+  const fw = quoteFab.offsetWidth, fh = quoteFab.offsetHeight;
+  let top = last.bottom + 8;
+  if (top + fh > box.bottom - 8) top = first.top - fh - 8;
+  const left = clamp(last.right - fw / 2, box.left + 8, box.right - fw - 8);
+  quoteFab.style.left = `${left}px`;
+  quoteFab.style.top = `${clamp(top, box.top + 8, box.bottom - fh - 8)}px`;
+}
+function hideFab() { quoteFab.hidden = true; }
+
+/* ================= 框选截图 ================= */
+function setCapture(on) {
+  on = !!on && !!S.pdf;
+  S.capture = on;
+  btnCapture.setAttribute('aria-pressed', String(on));
+  pdfPane.classList.toggle('capturing', on);
+  captureHint.hidden = !on;
+  if (on) { getSelection()?.removeAllRanges(); hideFab(); }
+}
+
+async function renderRegion(pageIndex, region) {
+  const page = await S.pdf.getPage(pageIndex + 1);
+  const base = page.getViewport({ scale: 1 });
+  let rs = clamp(S.scale * (window.devicePixelRatio || 1), 2.5, 4);
+  const maxSide = 3200;
+  rs = Math.min(rs, maxSide / Math.max(region.w * base.width, region.h * base.height, 1));
+  rs = Math.max(rs, 1);
+  const vpFull = page.getViewport({ scale: rs });
+  const sx = Math.floor(region.x * vpFull.width), sy = Math.floor(region.y * vpFull.height);
+  const sw = Math.max(1, Math.ceil(region.w * vpFull.width)), sh = Math.max(1, Math.ceil(region.h * vpFull.height));
+  const vp = page.getViewport({ scale: rs, offsetX: -sx, offsetY: -sy });
+  const canvas = document.createElement('canvas');
+  canvas.width = sw; canvas.height = sh;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, sw, sh);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  return canvas.toDataURL('image/png');
+}
+
+function bindCapture() {
+  pagesEl.addEventListener('pointerdown', e => {
+    if (!S.capture || e.button !== 0) return;
+    const pageEl = e.target.closest('.page');
+    if (!pageEl) return;
+    e.preventDefault();
+    const pageIndex = +pageEl.dataset.index;
+    const box = h('div', { class: 'cap-box' });
+    pageEl.append(box);
+    pageEl.setPointerCapture(e.pointerId);
+    const r0 = pageEl.getBoundingClientRect();
+    const sx = e.clientX - r0.left, sy = e.clientY - r0.top;
+    let cur = { x: sx, y: sy, w: 0, h: 0 };
+    const move = ev => {
+      const r = pageEl.getBoundingClientRect();
+      const x = clamp(ev.clientX - r.left, 0, r.width), y = clamp(ev.clientY - r.top, 0, r.height);
+      const ax = clamp(sx + (r0.left - r.left), 0, r.width), ay = clamp(sy + (r0.top - r.top), 0, r.height);
+      cur = { x: Math.min(ax, x), y: Math.min(ay, y), w: Math.abs(x - ax), h: Math.abs(y - ay) };
+      box.style.cssText = `left:${cur.x}px;top:${cur.y}px;width:${cur.w}px;height:${cur.h}px`;
+    };
+    const end = async ev => {
+      pageEl.removeEventListener('pointermove', move);
+      pageEl.removeEventListener('pointerup', end);
+      pageEl.removeEventListener('pointercancel', end);
+      box.remove();
+      if (ev.type === 'pointercancel' || cur.w < 6 || cur.h < 6) return;
+      const W = pageEl.offsetWidth, H = pageEl.offsetHeight;
+      const region = { x: cur.x / W, y: cur.y / H, w: cur.w / W, h: cur.h / H };
+      setCapture(false);
+      try {
+        const src = await renderRegion(pageIndex, region);
+        insertBlock({ id: uid(), type: 'image', src, caption: '', page: pageIndex, region });
+        toast(`已截取第 ${pageIndex + 1} 页的区域`);
+      } catch (err) {
+        console.error(err);
+        toast('截图失败，请再试一次。', { type: 'error' });
+      }
+    };
+    pageEl.addEventListener('pointermove', move);
+    pageEl.addEventListener('pointerup', end);
+    pageEl.addEventListener('pointercancel', end);
+  });
+}
+
+/* ================= PDF 上的高亮与定位 ================= */
+function refreshHighlights() {
+  for (const ps of S.pages) ps.hl.replaceChildren();
+  if (!S.paper) return;
+  for (const b of S.paper.blocks) {
+    if (b.type !== 'quote' || !Array.isArray(b.rects)) continue;
+    for (const r of b.rects) {
+      const ps = S.pages[r.p];
+      if (!ps) continue;
+      ps.hl.append(h('div', {
+        class: 'hl', dataset: { id: b.id },
+        style: `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%`,
+      }));
+    }
+  }
+}
+
+function sourceOf(b) {
+  if (b.type === 'quote') {
+    const r = Array.isArray(b.rects) && b.rects[0];
+    return r ? { p: r.p, r } : (Number.isInteger(b.page) ? { p: b.page, r: null } : null);
+  }
+  if (b.type === 'image' && Number.isInteger(b.page)) return { p: b.page, r: b.region || null };
+  return null;
+}
+
+function revealSource(b) {
+  const src = sourceOf(b);
+  const ps = src && S.pages[src.p];
+  if (!ps) { toast('这条笔记在当前 PDF 里找不到对应位置。'); return; }
+  const H = ps.div.offsetHeight, W = ps.div.offsetWidth;
+  const top = ps.div.offsetTop + (src.r ? src.r.y * H : 0) - pdfScroller.clientHeight * 0.28;
+  const left = ps.div.offsetLeft + (src.r ? src.r.x * W : 0) - pdfScroller.clientWidth * 0.15;
+  pdfScroller.scrollTo({ top: Math.max(0, top), left: Math.max(0, left), behavior: smooth() });
+  if (b.type === 'quote' && b.rects && b.rects.length) {
+    for (const el of $$(`.hl[data-id="${b.id}"]`, pagesEl)) flash(el, 1500);
+  } else if (src.r) {
+    const r = src.r;
+    const box = h('div', { class: 'flash-box', style: `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%` });
+    ps.hl.append(box);
+    setTimeout(() => box.classList.add('out'), 1400);
+    setTimeout(() => box.remove(), 2000);
+  }
+}
+
+function flash(el, ms = 1300) {
+  if (!el) return;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  el.classList.add('flash');
+  clearTimeout(el._flashTimer);
+  el._flashTimer = setTimeout(() => el.classList.remove('flash'), ms);
+}
+
+function revealBlock(id) {
+  const el = notesList.querySelector(`.blk[data-id="${id}"]`);
+  if (!el) return;
+  setActive(id);
+  el.scrollIntoView({ block: 'center', behavior: smooth() });
+  flash(el);
+}
+
+/* ================= 笔记 ================= */
+function blocks() { return S.paper ? S.paper.blocks : []; }
+function indexOfBlock(id) { return blocks().findIndex(b => b.id === id); }
+
+function autosize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function autosizeAll() { $$('textarea', notesList).forEach(autosize); }
+
+function srcTag(b) {
+  const src = sourceOf(b);
+  if (!src) return null;
+  return h('button', { class: 'src', type: 'button', title: '在论文中定位', onclick: () => revealSource(b) }, [`第 ${src.p + 1} 页`, icon('jump')]);
+}
+
+function blockEl(b) {
+  const handle = h('button', { class: 'blk-handle', type: 'button', draggable: 'true', title: '拖动排序（也可以用 Alt + ↑/↓）', 'aria-label': '拖动排序' }, icon('grip'));
+  const del = h('button', { class: 'blk-del', type: 'button', title: '删除', 'aria-label': '删除这条笔记', onclick: () => deleteBlock(b.id) }, icon('trash'));
+  let body;
+  if (b.type === 'text') {
+    body = h('textarea', { class: 'f-text', rows: '1', placeholder: '写下你的想法…', 'aria-label': '笔记文字', value: b.text || '' });
+    body.addEventListener('input', () => { b.text = body.value; autosize(body); touch(); });
+  } else if (b.type === 'quote') {
+    const q = h('textarea', { class: 'f-quote', rows: '1', 'aria-label': '引用的原文', value: b.text || '' });
+    q.addEventListener('input', () => { b.text = q.value; autosize(q); touch(); });
+    const note = h('textarea', { class: 'f-note', rows: '1', placeholder: '添加批注…', 'aria-label': '批注', value: b.note || '' });
+    note.addEventListener('input', () => { b.note = note.value; autosize(note); touch(); });
+    body = h('div', { class: 'quote' }, [q, h('div', { class: 'quote-foot' }, srcTag(b)), note]);
+  } else {
+    const img = h('img', { src: b.src, alt: b.caption || '笔记图片', loading: 'lazy', onclick: () => openLightbox(b.src) });
+    const cap = h('input', { class: 'f-cap', placeholder: '添加图注…', 'aria-label': '图注', value: b.caption || '' });
+    cap.addEventListener('input', () => { b.caption = cap.value; img.alt = cap.value || '笔记图片'; touch(); });
+    body = h('figure', { class: 'figure' }, [img, h('figcaption', null, [cap, srcTag(b)])]);
+  }
+  return h('div', { class: `blk blk-${b.type}`, dataset: { id: b.id } }, [handle, body, del]);
+}
+
+function renderHeader() {
+  const has = !!S.paper;
+  notesTitle.disabled = !has;
+  notesTitle.value = has ? S.paper.title || '' : '';
+  $('#docName').textContent = has ? S.paper.fileName : '';
+  $('#btnAddText').disabled = !has;
+  btnExport.disabled = !has;
+  document.title = has ? `${S.paper.title || S.paper.fileName} - Paper Note` : 'Paper Note';
+}
+
+function renderNotes() {
+  const list = blocks();
+  notesList.replaceChildren(...list.map(blockEl), dropLine);
+  notesEmpty.hidden = list.length > 0;
+  $('#emptyNoPaper').hidden = !!S.paper;
+  $('#emptyPaper').hidden = !S.paper;
+  addTail.hidden = !S.paper || list.length === 0;
+  markActive();
+  autosizeAll();
+  refreshHighlights();
+}
+
+function setActive(id) { S.activeId = id; markActive(); }
+function markActive() {
+  for (const el of $$('.blk', notesList)) el.classList.toggle('is-active', el.dataset.id === S.activeId);
+}
+
+function insertBlock(b, index) {
+  if (!S.paper) return null;
+  const list = S.paper.blocks;
+  if (index == null) {
+    const ai = indexOfBlock(S.activeId);
+    index = ai >= 0 ? ai + 1 : list.length;
+  }
+  list.splice(clamp(index, 0, list.length), 0, b);
+  S.activeId = b.id;
+  touch();
+  renderNotes();
+  const el = notesList.querySelector(`.blk[data-id="${b.id}"]`);
+  if (el) {
+    el.scrollIntoView({ block: 'nearest', behavior: smooth() });
+    if (b.type !== 'text') flash(el);
+  }
+  return el;
+}
+
+function addTextBlock(index, text = '', focus = true) {
+  const el = insertBlock({ id: uid(), type: 'text', text }, index);
+  if (el && focus) {
+    const ta = $('textarea', el);
+    ta.focus({ preventScroll: true });
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    el.scrollIntoView({ block: 'nearest', behavior: smooth() });
+  }
+}
+
+function deleteBlock(id, { silent = false } = {}) {
+  const list = blocks();
+  const i = indexOfBlock(id);
+  if (i < 0) return;
+  const [removed] = list.splice(i, 1);
+  S.activeId = list[i - 1]?.id || list[i]?.id || null;
+  touch();
+  renderNotes();
+  if (!silent) {
+    const paper = S.paper;
+    toast('已删除一条笔记', {
+      action: {
+        label: '撤销', fn: () => {
+          if (S.paper !== paper) return;
+          paper.blocks.splice(Math.min(i, paper.blocks.length), 0, removed);
+          S.activeId = removed.id; touch(); renderNotes();
+        },
+      },
+    });
+  }
+}
+
+function moveBlock(id, toIndex) {
+  const list = blocks();
+  const from = indexOfBlock(id);
+  if (from < 0) return;
+  if (toIndex > from) toIndex--;
+  toIndex = clamp(toIndex, 0, list.length - 1);
+  if (toIndex === from) return;
+  const [b] = list.splice(from, 1);
+  list.splice(toIndex, 0, b);
+  S.activeId = id;
+  touch();
+  renderNotes();
+  flash(notesList.querySelector(`.blk[data-id="${id}"]`), 700);
+}
+
+function focusBlockEnd(id) {
+  const el = notesList.querySelector(`.blk[data-id="${id}"]`);
+  if (!el) return;
+  const fields = $$('textarea, input', el);
+  const f = fields[fields.length - 1];
+  if (f) { f.focus(); const n = f.value.length; f.setSelectionRange(n, n); }
+}
+
+function openLightbox(src) {
+  $('img', lightbox).src = src;
+  lightbox.showModal();
+}
+
+/* ================= 保存 ================= */
+let saveTimer = 0, dirty = false;
+function touch() {
+  if (!S.paper) return;
+  S.paper.updatedAt = Date.now();
+  dirty = true;
+  if (!S.dbOk) { setSaveState('off'); return; }
+  setSaveState('saving');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 500);
+}
+async function flushSave() {
+  clearTimeout(saveTimer);
+  if (!dirty || !S.paper || !S.dbOk) return;
+  dirty = false;
+  try {
+    await DB.put('papers', S.paper);
+    if (!dirty) setSaveState('saved');
+  } catch (e) {
+    dirty = true;
+    storageProblem(e);
+  }
+}
+function setSaveState(s) {
+  const map = { saved: '已自动保存', saving: '正在保存…', error: '保存失败', off: '浏览器不允许本地存储，关闭页面前请先导出' };
+  saveStateEl.textContent = map[s] || '';
+  saveStateEl.classList.toggle('is-error', s === 'error' || s === 'off');
+}
+let storageWarned = false;
+function storageProblem(e) {
+  console.warn(e);
+  setSaveState('error');
+  if (storageWarned) return;
+  storageWarned = true;
+  const full = e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+  toast(full ? '浏览器存储空间不够了。请在「论文库」里删掉不需要的论文，或先导出笔记。' : '笔记没能保存到浏览器里，请先用「导出笔记」备份。', { type: 'error', ms: 7000 });
+}
+
+/* ================= 论文库 ================= */
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+async function updateLibHint() {
+  const hint = $('#libHint');
+  if (!S.dbOk) { hint.hidden = true; return; }
+  try {
+    const all = await DB.all('papers');
+    hint.hidden = !all.length;
+    hint.textContent = `从论文库打开（${all.length} 篇）`;
+  } catch (e) { hint.hidden = true; }
+}
+async function openLibrary() {
+  if (!S.dbOk) { toast('这个浏览器不允许本地存储，论文库用不了。', { type: 'error' }); return; }
+  await flushSave();
+  let all = [];
+  try { all = await DB.all('papers'); } catch (e) { storageProblem(e); return; }
+  all.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  $('#libList').replaceChildren(...all.map(rec => h('li', { class: 'lib-item' + (rec.id === S.paper?.id ? ' is-current' : '') }, [
+    h('button', { class: 'lib-open', type: 'button', onclick: () => openFromLibrary(rec.id) }, [
+      h('span', { class: 'lib-title', text: rec.title || rec.fileName }),
+      h('span', { class: 'lib-meta', text: `${(rec.blocks || []).length} 条笔记，${fmtTime(rec.updatedAt)} 更新，${rec.fileName}` }),
+    ]),
+    h('button', { class: 'btn ghost danger', type: 'button', onclick: () => removeFromLibrary(rec) }, '删除'),
+  ])));
+  $('#libEmpty').hidden = all.length > 0;
+  if (!libModal.open) libModal.showModal();
+}
+async function openFromLibrary(id) {
+  libModal.close();
+  if (id === S.paper?.id) return;
+  try {
+    const [rec, file] = await Promise.all([DB.get('papers', id), DB.get('files', id)]);
+    if (!rec) return;
+    if (!file) { toast(`库里没有「${rec.fileName}」的 PDF 文件了。重新打开这个 PDF，笔记会自动恢复。`, { ms: 6000 }); return; }
+    await openPdf(file, rec.fileName, { fromLibrary: true });
+  } catch (e) { storageProblem(e); }
+}
+async function removeFromLibrary(rec) {
+  if (!confirm(`删除「${rec.title || rec.fileName}」和它的 ${(rec.blocks || []).length} 条笔记？删除后无法恢复。`)) return;
+  try {
+    await DB.del('papers', rec.id);
+    await DB.del('files', rec.id);
+    if (rec.id === S.paper?.id) {
+      dirty = false;
+      closeDoc();
+      S.paper = null;
+      await DB.del('kv', 'last');
+      renderHeader(); renderNotes(); setSaveState(''); setPdfStatus('idle');
+    }
+  } catch (e) { storageProblem(e); }
+  await updateLibHint();
+  openLibrary();
+}
+
+/* ================= 导出与导入 ================= */
+function safeName(s) { return (s || 'paper-notes').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'paper-notes'; }
+function extOf(src) { const m = /^data:image\/(png|jpe?g|gif|webp)/i.exec(src || ''); return m ? (m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase()) : 'png'; }
+function download(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name, style: 'display:none' });
+  document.body.append(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
+}
+
+function buildMarkdown(mode) {
+  const P = S.paper;
+  const out = [`# ${P.title || P.fileName}`, '', `> 原文：${P.fileName}`, ''];
+  const images = [];
+  for (const b of P.blocks) {
+    if (b.type === 'text') {
+      if ((b.text || '').trim()) out.push(b.text.replace(/\s+$/, ''), '');
+    } else if (b.type === 'quote') {
+      out.push(...(b.text || '').split('\n').map(l => '> ' + l));
+      const src = sourceOf(b);
+      if (src) out.push('>', `> （第 ${src.p + 1} 页）`);
+      out.push('');
+      if ((b.note || '').trim()) out.push(b.note.replace(/\s+$/, ''), '');
+    } else if (b.type === 'image') {
+      const n = images.length + 1;
+      const path = `images/figure-${String(n).padStart(2, '0')}.${extOf(b.src)}`;
+      images.push({ path, src: b.src });
+      const alt = (b.caption || `图 ${n}`).replace(/[[\]\n]/g, ' ');
+      out.push(`![${alt}](${mode === 'inline' ? b.src : path})`);
+      const cap = [(b.caption || '').trim(), Number.isInteger(b.page) ? `第 ${b.page + 1} 页` : ''].filter(Boolean).join('，');
+      if (cap) out.push('', `*${cap.replace(/\*/g, '\\*')}*`);
+      out.push('');
+    }
+  }
+  return { md: out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n', images };
+}
+
+function buildHtml() {
+  const P = S.paper;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const body = P.blocks.map(b => {
+    if (b.type === 'text') return (b.text || '').trim() ? `<div class="t">${esc(b.text)}</div>` : '';
+    if (b.type === 'quote') {
+      const src = sourceOf(b);
+      return `<blockquote><div class="q">${esc(b.text)}</div>${src ? `<div class="src">第 ${src.p + 1} 页</div>` : ''}</blockquote>`
+        + ((b.note || '').trim() ? `<div class="t note">${esc(b.note)}</div>` : '');
+    }
+    const cap = [(b.caption || '').trim(), Number.isInteger(b.page) ? `第 ${b.page + 1} 页` : ''].filter(Boolean).join('，');
+    return `<figure><img src="${esc(b.src)}" alt="${esc(b.caption || '')}">${cap ? `<figcaption>${esc(cap)}</figcaption>` : ''}</figure>`;
+  }).join('\n');
+  return `<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(P.title || P.fileName)}</title>
+<style>
+body{margin:0;background:#fff;color:#23272c;font:15px/1.75 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:720px;margin:0 auto;padding:48px 28px 80px}
+h1{font:600 26px/1.35 "Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,serif;margin:0 0 6px}
+.meta{color:#8a9099;font-size:13px;margin:0 0 32px}
+.t{white-space:pre-wrap;margin:0 0 18px}
+.note{margin-top:-6px}
+blockquote{margin:0 0 18px;padding:2px 0 2px 16px;border-left:4px solid #ffd43b}
+.q{white-space:pre-wrap;font:15.5px/1.85 "Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,serif}
+.src{color:#2756a8;font-size:12.5px;margin-top:2px}
+figure{margin:0 0 22px}
+img{display:block;max-width:100%;border:1px solid #e2e2dc;border-radius:4px}
+figcaption{color:#5d646d;font-size:13px;margin-top:6px}
+@media print{main{padding:0}blockquote,figure{break-inside:avoid}}
+</style></head>
+<body><main><h1>${esc(P.title || P.fileName)}</h1><p class="meta">原文：${esc(P.fileName)}，导出于 ${fmtTime(Date.now())}</p>
+${body}
+</main></body></html>`;
+}
+
+async function doExport(kind) {
+  closeMenu();
+  if (kind === 'import') { jsonInput.click(); return; }
+  if (!S.paper) return;
+  await flushSave();
+  const base = safeName(S.paper.title || S.paper.fileName.replace(/\.pdf$/i, ''));
+  try {
+    if (kind === 'md') {
+      download(new Blob([buildMarkdown('inline').md], { type: 'text/markdown;charset=utf-8' }), `${base}.md`);
+    } else if (kind === 'zip') {
+      toast('正在打包…');
+      const JSZip = await ensureJSZip();
+      const { md, images } = buildMarkdown('files');
+      const zip = new JSZip();
+      zip.file(`${base}.md`, md);
+      for (const im of images) zip.file(im.path, im.src.slice(im.src.indexOf(',') + 1), { base64: true });
+      download(await zip.generateAsync({ type: 'blob' }), `${base}.zip`);
+    } else if (kind === 'html') {
+      download(new Blob([buildHtml()], { type: 'text/html;charset=utf-8' }), `${base}.html`);
+    } else if (kind === 'json') {
+      const P = S.paper;
+      const data = { app: 'paper-note', version: 1, exportedAt: new Date().toISOString(), paper: { id: P.id, title: P.title, fileName: P.fileName }, blocks: P.blocks };
+      download(new Blob([JSON.stringify(data)], { type: 'application/json' }), `${base}.paper-note.json`);
+    }
+  } catch (e) {
+    console.error(e);
+    toast(e.message || '导出失败，请重试。', { type: 'error', ms: 5000 });
+  }
+}
+
+function sanitizeBlock(b, sameDoc) {
+  if (!b || typeof b !== 'object') return null;
+  const n = S.pages.length;
+  const okPage = p => sameDoc && Number.isInteger(p) && p >= 0 && p < n;
+  const okRect = r => r && ['x', 'y', 'w', 'h'].every(k => Number.isFinite(r[k]) && r[k] >= -0.01 && r[k] <= 1.01);
+  const id = uid();
+  if (b.type === 'text') return { id, type: 'text', text: String(b.text ?? '') };
+  if (b.type === 'quote') {
+    const rects = sameDoc && Array.isArray(b.rects) ? b.rects.filter(r => okRect(r) && okPage(r.p)).slice(0, 400) : [];
+    return { id, type: 'quote', text: String(b.text ?? ''), note: String(b.note ?? ''), page: okPage(b.page) ? b.page : null, rects };
+  }
+  if (b.type === 'image' && typeof b.src === 'string' && /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/i.test(b.src)) {
+    return { id, type: 'image', src: b.src, caption: String(b.caption ?? ''), page: okPage(b.page) ? b.page : null, region: okPage(b.page) && okRect(b.region) ? b.region : null };
+  }
+  return null;
+}
+
+async function importJson(file) {
+  if (!S.paper) { toast('请先打开对应的论文，再导入笔记备份。'); return; }
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('这个文件不是 Paper Note 的备份。', { type: 'error' }); return; }
+  if (!data || !Array.isArray(data.blocks)) { toast('这个文件不是 Paper Note 的备份。', { type: 'error' }); return; }
+  const sameDoc = !data.paper?.id || data.paper.id === S.paper.id;
+  if (!sameDoc && !confirm(`这份备份来自「${data.paper.title || data.paper.fileName || '另一篇论文'}」，不是当前打开的论文。\n仍然导入吗？（页码定位和高亮会被去掉）`)) return;
+  const list = data.blocks.map(b => sanitizeBlock(b, sameDoc)).filter(Boolean);
+  if (!list.length) { toast('备份里没有可以导入的笔记。'); return; }
+  S.paper.blocks.push(...list);
+  touch(); renderNotes();
+  toast(`已导入 ${list.length} 条笔记`);
+}
+
+/* ================= 菜单 ================= */
+function closeMenu() { exportMenu.hidden = true; btnExport.setAttribute('aria-expanded', 'false'); }
+function toggleMenu() {
+  const open = exportMenu.hidden;
+  exportMenu.hidden = !open;
+  btnExport.setAttribute('aria-expanded', String(open));
+  if (open) $('button', exportMenu).focus();
+}
+
+/* ================= 粘贴与拖放 ================= */
+const isEditable = t => !!(t && t.closest && t.closest('input, textarea, [contenteditable="true"], [contenteditable=""]'));
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+function imageBlock(src) { return { id: uid(), type: 'image', src, caption: '', page: null, region: null }; }
+
+async function addImageFiles(files, index) {
+  let i = index;
+  for (const f of files) {
+    try {
+      const el = insertBlock(imageBlock(await fileToDataURL(f)), i);
+      if (i != null) i++;
+      if (!el) break;
+    } catch (e) { toast('有一张图片读取失败。', { type: 'error' }); }
+  }
+}
+
+function bindPasteAndDrop() {
+  document.addEventListener('paste', async e => {
+    if (e.target.closest && e.target.closest('dialog')) return;
+    const items = [...(e.clipboardData?.items || [])];
+    let files = items.filter(it => it.kind === 'file' && it.type.startsWith('image/')).map(it => it.getAsFile()).filter(Boolean);
+    if (!files.length) files = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/'));
+    if (files.length) {
+      e.preventDefault();
+      if (!S.paper) { toast('先打开一篇论文，再粘贴截图。'); return; }
+      const blk = e.target.closest && e.target.closest('.blk');
+      await addImageFiles(files, blk ? indexOfBlock(blk.dataset.id) + 1 : undefined);
+      toast(files.length > 1 ? `已粘贴 ${files.length} 张图片` : '已粘贴图片');
+      return;
+    }
+    if (isEditable(e.target) || !S.paper) return;
+    const text = e.clipboardData?.getData('text/plain');
+    if (text && text.trim()) { e.preventDefault(); addTextBlock(undefined, text, true); }
+  });
+
+  // 笔记区内的拖放：排序、PDF 选文引用、图片文件
+  let dragBlockId = null, pdfDrag = null;
+  notesList.addEventListener('dragstart', e => {
+    const t = e.target.nodeType === 1 ? e.target : e.target.parentElement;
+    const handle = t && t.closest('.blk-handle');
+    if (!handle) return;
+    const blk = handle.closest('.blk');
+    dragBlockId = blk.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/x-paper-note-block', dragBlockId);
+    try { e.dataTransfer.setDragImage(blk, 24, 16); } catch (err) { /* ignore */ }
+    requestAnimationFrame(() => blk.classList.add('dragging'));
+  });
+  pagesEl.addEventListener('dragstart', e => {
+    if (S.capture) { e.preventDefault(); return; }
+    pdfDrag = captureSelection();
+    if (pdfDrag) { hideFab(); notesPane.classList.add('drop-ready'); }
+  });
+  document.addEventListener('dragend', () => {
+    dragBlockId = null; pdfDrag = null;
+    dropLine.hidden = true;
+    notesPane.classList.remove('drop-ready');
+    $$('.blk.dragging', notesList).forEach(x => x.classList.remove('dragging'));
+  });
+
+  const dropKind = e => {
+    if (dragBlockId) return 'block';
+    if (pdfDrag) return 'quote';
+    const types = [...(e.dataTransfer?.types || [])];
+    if (types.includes('Files')) return 'files';
+    if (types.includes('text/plain')) return 'text';
+    return null;
+  };
+  const dropIndexAt = y => {
+    const els = $$('.blk', notesList);
+    for (let i = 0; i < els.length; i++) {
+      const r = els[i].getBoundingClientRect();
+      if (y < r.top + r.height / 2) return i;
+    }
+    return els.length;
+  };
+  const showDropLine = i => {
+    const els = $$('.blk', notesList);
+    let top = 14;
+    if (els.length && i < els.length) top = els[i].offsetTop - 9;
+    else if (els.length) { const last = els[els.length - 1]; top = last.offsetTop + last.offsetHeight + 6; }
+    dropLine.style.top = top + 'px';
+    dropLine.hidden = false;
+  };
+
+  notesScroller.addEventListener('dragover', e => {
+    const k = dropKind(e);
+    if (!k || !S.paper) return;
+    if (k === 'text' && isEditable(e.target)) { dropLine.hidden = true; return; }
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = k === 'block' ? 'move' : 'copy';
+    showDropLine(dropIndexAt(e.clientY));
+  });
+  notesScroller.addEventListener('dragleave', e => { if (!notesScroller.contains(e.relatedTarget)) dropLine.hidden = true; });
+  notesScroller.addEventListener('drop', async e => {
+    const k = dropKind(e);
+    if (!k) return;
+    if (k === 'text' && isEditable(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dropLine.hidden = true;
+    notesPane.classList.remove('drop-ready');
+    const idx = dropIndexAt(e.clientY);
+    if (k === 'files') {
+      const files = [...e.dataTransfer.files];
+      const pdf = files.find(isPdf);
+      const imgs = files.filter(f => f.type.startsWith('image/'));
+      if (!S.paper || (!imgs.length && pdf)) { if (pdf) openPdf(pdf, pdf.name); return; }
+      await addImageFiles(imgs, idx);
+      return;
+    }
+    if (!S.paper) return;
+    if (k === 'block') moveBlock(dragBlockId, idx);
+    else if (k === 'quote') { addQuote(pdfDrag, idx); getSelection()?.removeAllRanges(); }
+    else if (k === 'text') { const t = e.dataTransfer.getData('text/plain'); if (t.trim()) addTextBlock(idx, t, false); }
+    dragBlockId = null; pdfDrag = null;
+  });
+
+  // PDF 区：拖入 PDF 文件
+  pdfPane.addEventListener('dragover', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    pdfPane.classList.add('dragover');
+  });
+  pdfPane.addEventListener('dragleave', e => { if (!pdfPane.contains(e.relatedTarget)) pdfPane.classList.remove('dragover'); });
+  pdfPane.addEventListener('drop', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    pdfPane.classList.remove('dragover');
+    const files = [...e.dataTransfer.files];
+    const pdf = files.find(isPdf);
+    if (pdf) openPdf(pdf, pdf.name);
+    else if (files.some(f => f.type.startsWith('image/'))) toast('图片请拖到右边的笔记区。');
+    else toast('只能打开 PDF 文件。');
+  });
+  // 防止把文件拖到页面其他位置时浏览器直接打开它
+  window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('drop', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    const pdf = [...e.dataTransfer.files].find(isPdf);
+    if (pdf) openPdf(pdf, pdf.name);
+  });
+}
+
+/* ================= 事件绑定 ================= */
+function bindUI() {
+  const pick = () => fileInput.click();
+  $('#btnOpen').addEventListener('click', pick);
+  $('#btnOpen2').addEventListener('click', pick);
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files[0];
+    fileInput.value = '';
+    if (!f) return;
+    if (!isPdf(f)) { toast('只能打开 PDF 文件。'); return; }
+    openPdf(f, f.name);
+  });
+  jsonInput.addEventListener('change', () => { const f = jsonInput.files[0]; jsonInput.value = ''; if (f) importJson(f); });
+  $('#btnLibrary').addEventListener('click', openLibrary);
+  $('#libHint').addEventListener('click', openLibrary);
+  libModal.addEventListener('click', e => { if (e.target === libModal || e.target.closest('[data-close]')) libModal.close(); });
+  lightbox.addEventListener('click', () => lightbox.close());
+
+  btnExport.addEventListener('click', e => { e.stopPropagation(); toggleMenu(); });
+  exportMenu.addEventListener('click', e => { const b = e.target.closest('[data-export]'); if (b) doExport(b.dataset.export); });
+  exportMenu.addEventListener('keydown', e => {
+    const items = $$('button', exportMenu);
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  });
+  document.addEventListener('click', e => { if (!exportMenu.hidden && !e.target.closest('.menu-wrap')) closeMenu(); });
+
+  // 缩放
+  $('#zoomIn').addEventListener('click', () => setScale(S.scale * 1.15));
+  $('#zoomOut').addEventListener('click', () => setScale(S.scale / 1.15));
+  btnFit.addEventListener('click', fitWidth);
+  pdfScroller.addEventListener('wheel', e => {
+    if (!(e.ctrlKey || e.metaKey) || !S.pdf) return;
+    e.preventDefault();
+    setScale(S.scale * Math.exp(-e.deltaY * 0.0022));
+  }, { passive: false });
+  let fitTimer = 0;
+  new ResizeObserver(() => {
+    if (!S.fit || !S.pages.length) return;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitWidth, 120);
+  }).observe(pdfScroller);
+
+  // 翻页
+  let scrollRaf = 0;
+  pdfScroller.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => {
+      scrollRaf = 0;
+      updateCurrentPage();
+      if (!quoteFab.hidden) showFab();
+    });
+  });
+  pageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { const n = parseInt(pageInput.value, 10); if (n) goToPage(n); pageInput.blur(); }
+    if (e.key === 'Escape') pageInput.blur();
+  });
+  pageInput.addEventListener('blur', () => { pageInput.value = S.pages.length ? String(S.curPage + 1) : ''; });
+
+  // 高亮开关
+  btnHl.addEventListener('click', () => {
+    S.showHl = !S.showHl;
+    btnHl.setAttribute('aria-pressed', String(S.showHl));
+    pagesEl.classList.toggle('hide-hl', !S.showHl);
+    prefs.set('showHl', S.showHl);
+  });
+
+  // 选文浮动按钮
+  pdfScroller.addEventListener('pointerdown', e => {
+    pointerDownInPdf = true;
+    if (!e.target.closest('.quote-fab')) hideFab();
+  });
+  document.addEventListener('pointerup', () => {
+    if (!pointerDownInPdf) return;
+    pointerDownInPdf = false;
+    setTimeout(showFab, 0);
+  });
+  let selTimer = 0;
+  document.addEventListener('selectionchange', () => {
+    const sel = getSelection();
+    if (!sel || sel.isCollapsed) { hideFab(); return; }
+    clearTimeout(selTimer);
+    selTimer = setTimeout(() => { if (!pointerDownInPdf) showFab(); }, 250);
+  });
+  quoteFab.addEventListener('pointerdown', e => e.preventDefault());
+  quoteFab.addEventListener('mousedown', e => e.preventDefault());
+  quoteFab.addEventListener('click', () => {
+    const q = captureSelection();
+    if (q) addQuote(q);
+    getSelection()?.removeAllRanges();
+    hideFab();
+  });
+
+  // 文字层选区优化（同 pdf.js 官方查看器）
+  pagesEl.addEventListener('mousedown', e => {
+    const tl = e.target.closest && e.target.closest('.textLayer');
+    const end = tl && tl.querySelector('.endOfContent');
+    if (!end) return;
+    if (e.target !== tl) {
+      const b = tl.getBoundingClientRect();
+      end.style.top = (Math.max(0, (e.clientY - b.top) / b.height) * 100).toFixed(2) + '%';
+    }
+    end.classList.add('active');
+  });
+  document.addEventListener('mouseup', () => {
+    for (const end of $$('.endOfContent.active', pagesEl)) { end.classList.remove('active'); end.style.top = ''; }
+  });
+
+  // 点击 PDF 上的高亮 → 跳到对应笔记
+  pagesEl.addEventListener('click', e => {
+    if (S.capture || !S.paper || !S.showHl) return;
+    const sel = getSelection();
+    if (sel && !sel.isCollapsed) return;
+    const pageEl = e.target.closest('.page');
+    if (!pageEl) return;
+    const p = +pageEl.dataset.index;
+    const r = pageEl.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    const pad = 0.002;
+    const hit = S.paper.blocks.find(b => b.type === 'quote' && Array.isArray(b.rects) &&
+      b.rects.some(q => q.p === p && x >= q.x - pad && x <= q.x + q.w + pad && y >= q.y - pad && y <= q.y + q.h + pad));
+    if (hit) revealBlock(hit.id);
+  });
+
+  // 框选截图
+  btnCapture.addEventListener('click', () => setCapture(!S.capture));
+  bindCapture();
+
+  // 笔记操作
+  $('#btnAddText').addEventListener('click', () => addTextBlock());
+  $('#startWriting').addEventListener('click', () => addTextBlock());
+  addTail.addEventListener('click', () => addTextBlock(blocks().length));
+  notesTitle.addEventListener('input', () => {
+    if (!S.paper) return;
+    S.paper.title = notesTitle.value;
+    document.title = `${S.paper.title || S.paper.fileName} - Paper Note`;
+    touch();
+  });
+  notesTitle.addEventListener('keydown', e => { if (e.key === 'Enter') notesTitle.blur(); });
+  notesList.addEventListener('focusin', e => { const b = e.target.closest('.blk'); if (b) setActive(b.dataset.id); });
+  notesList.addEventListener('pointerdown', e => { const b = e.target.closest('.blk'); if (b) setActive(b.dataset.id); });
+  notesList.addEventListener('keydown', e => {
+    const blkEl = e.target.closest('.blk');
+    if (!blkEl || !S.paper) return;
+    const id = blkEl.dataset.id;
+    const i = indexOfBlock(id);
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      addTextBlock(i + 1);
+    } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      const fieldClass = e.target.className;
+      const j = e.key === 'ArrowUp' ? i - 1 : i + 2;
+      if (j < 0 || j > blocks().length) return;
+      moveBlock(id, j);
+      const moved = notesList.querySelector(`.blk[data-id="${id}"]`);
+      const f = moved && (fieldClass ? moved.querySelector('.' + fieldClass.split(' ')[0]) : null);
+      (f || moved)?.focus();
+    } else if (e.key === 'Backspace' && e.target.classList.contains('f-text') && e.target.value === '' && blocks().length > 1) {
+      e.preventDefault();
+      const prev = blocks()[i - 1] || blocks()[i + 1];
+      deleteBlock(id, { silent: true });
+      if (prev) focusBlockEnd(prev.id);
+    }
+  });
+  let lastListWidth = 0;
+  new ResizeObserver(entries => {
+    const w = entries[0].contentRect.width;
+    if (Math.abs(w - lastListWidth) > 1) { lastListWidth = w; autosizeAll(); }
+  }).observe(notesList);
+
+  // 分栏拖动
+  const divider = $('#divider');
+  const setSplit = r => { S.split = clamp(r, 0.25, 0.78); workspace.style.setProperty('--split', (S.split * 100).toFixed(2) + '%'); };
+  setSplit(prefs.get('split', 0.58));
+  divider.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    divider.setPointerCapture(e.pointerId);
+    workspace.classList.add('resizing');
+    const rect = workspace.getBoundingClientRect();
+    const move = ev => setSplit((ev.clientX - rect.left) / rect.width);
+    const up = () => {
+      divider.removeEventListener('pointermove', move);
+      divider.removeEventListener('pointerup', up);
+      divider.removeEventListener('pointercancel', up);
+      workspace.classList.remove('resizing');
+      prefs.set('split', S.split);
+    };
+    divider.addEventListener('pointermove', move);
+    divider.addEventListener('pointerup', up);
+    divider.addEventListener('pointercancel', up);
+  });
+  divider.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    setSplit(S.split + (e.key === 'ArrowLeft' ? -0.02 : 0.02));
+    prefs.set('split', S.split);
+  });
+
+  // 全局按键
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!exportMenu.hidden) { closeMenu(); btnExport.focus(); }
+      if (S.capture) setCapture(false);
+      hideFab();
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
+  window.addEventListener('pagehide', flushSave);
+
+  S.showHl = prefs.get('showHl', true);
+  btnHl.setAttribute('aria-pressed', String(S.showHl));
+  pagesEl.classList.toggle('hide-hl', !S.showHl);
+}
+
+/* ================= 启动 ================= */
+(async function boot() {
+  bindUI();
+  bindPasteAndDrop();
+  renderHeader();
+  renderNotes();
+  setPdfStatus('idle');
+  updateZoomLabel();
+  try { await DB.open(); S.dbOk = true; } catch (e) { S.dbOk = false; console.warn('IndexedDB unavailable', e); }
+  ensurePdfjs().catch(err => toast(err.message, { type: 'error', ms: 8000 }));
+  if (S.dbOk) {
+    try {
+      const last = await DB.get('kv', 'last');
+      if (last) {
+        const [rec, file] = await Promise.all([DB.get('papers', last), DB.get('files', last)]);
+        if (rec && file) await openPdf(file, rec.fileName, { fromLibrary: true });
+      }
+    } catch (e) { console.warn(e); }
+    updateLibHint();
+  }
+})();
+})();
+</script>
+</body>
+</html>
