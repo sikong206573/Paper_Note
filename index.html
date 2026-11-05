@@ -187,13 +187,37 @@ button { cursor: pointer; }
 .pdf-pane.dragover .drop-card { border-color: var(--marker); background: rgba(255, 212, 59, .08); }
 .pdf-pane.dragover .pdf-scroller { box-shadow: inset 0 0 0 3px var(--marker); }
 
-.quote-fab {
-  position: fixed; z-index: 50; display: inline-flex; align-items: center; gap: 6px;
-  height: 34px; padding: 0 14px 0 11px; border: 1px solid var(--marker-edge); border-radius: 17px;
-  background: var(--marker); color: var(--marker-ink); font-size: 13px; font-weight: 600;
+.sel-bar {
+  position: fixed; z-index: 50; display: inline-flex; overflow: hidden;
+  border: 1px solid var(--marker-edge); border-radius: 17px; background: var(--marker);
   box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
 }
-.quote-fab:hover { filter: brightness(1.04); }
+.sel-bar button {
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px;
+  border: 0; background: transparent; color: var(--marker-ink); font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.sel-bar button:first-child { padding-left: 11px; }
+.sel-bar button + button { border-left: 1px solid rgba(59, 48, 0, .2); }
+.sel-bar button:hover { background: rgba(255, 255, 255, .3); }
+.sel-bar button.is-off { color: rgba(59, 48, 0, .5); }
+
+.trans-pop {
+  position: absolute; z-index: 20; width: min(440px, calc(100% - 24px));
+  background: var(--sheet); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .3);
+}
+.tp-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 6px 0 16px; font-size: 12px; color: var(--ink-3); }
+.tp-close { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--ink-3); }
+.tp-close:hover { background: var(--sheet-2); color: var(--ink); }
+.tp-body { max-height: 40vh; overflow: auto; padding: 2px 16px 12px; font: 15px/1.75 var(--sans); white-space: pre-wrap; }
+.tp-body.is-muted { color: var(--ink-3); font-size: 13.5px; }
+.tp-body.is-error { color: #c2412f; font-size: 13.5px; }
+.tp-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 12px 12px 16px; border-top: 1px solid var(--line); }
+.tp-auto { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; user-select: none; }
+.tp-auto input { margin: 0; accent-color: var(--marker-edge); }
+.tp-actions { display: flex; gap: 8px; margin-left: auto; }
+.btn.marker { background: var(--marker); border-color: var(--marker-edge); color: var(--marker-ink); font-weight: 600; }
+.btn.marker:hover:not(:disabled) { background: var(--marker); filter: brightness(1.04); }
 
 /* ---------- 笔记 ---------- */
 .notes-pane { background: var(--sheet); }
@@ -246,6 +270,15 @@ button { cursor: pointer; }
 }
 .src:hover { background: var(--sheet-2); }
 .src .ico { width: 12px; height: 12px; }
+.q-tr-btn {
+  display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 6px;
+  border: 0; border-radius: 5px; background: transparent; color: var(--ink-2); font-size: 12.5px; white-space: nowrap;
+}
+.q-tr-btn:hover { background: var(--sheet-2); color: var(--ink); }
+.q-tr-btn .ico { width: 13px; height: 13px; }
+.q-trans { margin-top: 3px; }
+.f-trans { font: 14.5px/1.75 var(--sans); color: var(--ink-2); }
+.q-trans-status { font-size: 13px; color: var(--ink-3); }
 .f-note { margin-top: 6px; padding-top: 7px !important; border-top: 1px dashed var(--line-strong) !important; font: 14.5px/1.7 var(--sans); }
 .figure { margin: 0; }
 .figure img {
@@ -380,6 +413,22 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
     </div>
     <div class="pdf-scroller" id="pdfScroller">
       <div class="pages" id="pages"></div>
+      <div class="trans-pop" id="transPop" role="dialog" aria-label="中文翻译" hidden>
+        <div class="tp-head">
+          <span>中文翻译</span>
+          <button class="tp-close" id="tpClose" type="button" aria-label="关闭翻译">
+            <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></span>
+          </button>
+        </div>
+        <div class="tp-body" id="tpBody" aria-live="polite"></div>
+        <div class="tp-foot">
+          <label class="tp-auto"><input type="checkbox" id="tpAuto">引用时自动附上译文</label>
+          <div class="tp-actions">
+            <button class="btn" id="tpCopy" type="button">复制译文</button>
+            <button class="btn marker" id="tpQuote" type="button">引用到笔记</button>
+          </div>
+        </div>
+      </div>
       <div class="pdf-empty" id="pdfEmpty">
         <div class="drop-card">
           <svg viewBox="0 0 56 56" fill="none" aria-hidden="true">
@@ -420,7 +469,7 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
           <ul class="ways">
             <li>
               <span class="way-ico is-quote"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 9.6C2.5 7 3.9 5 6.3 3.9l.5.9C5.5 5.5 4.8 6.5 4.7 7.7h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H3.4c-.5 0-.9-.4-.9-.9V9.6Zm6.4 0C8.9 7 10.3 5 12.7 3.9l.5.9c-1.3.7-2 1.7-2.1 2.9h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H9.8c-.5 0-.9-.4-.9-.9V9.6Z"/></svg></span></span>
-              <div><strong>引用原文</strong><span>在左侧选中文字，点「引用到笔记」，或者把选中的文字直接拖到这里。</span></div>
+              <div><strong>引用原文</strong><span>在左侧选中文字，点「引用到笔记」，或者把选中的文字直接拖到这里。英文段落还可以点「翻译」看中文。</span></div>
             </li>
             <li>
               <span class="way-ico"><span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 1.5v10h10M1.5 4.5h10v10"/></svg></span></span>
@@ -438,10 +487,16 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
   </section>
 </main>
 
-<button class="quote-fab" id="quoteFab" type="button" hidden>
+<div class="sel-bar" id="selBar" hidden>
+<button id="btnQuote" type="button" title="把选中的文字存为引用笔记">
   <span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 9.6C2.5 7 3.9 5 6.3 3.9l.5.9C5.5 5.5 4.8 6.5 4.7 7.7h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H3.4c-.5 0-.9-.4-.9-.9V9.6Zm6.4 0C8.9 7 10.3 5 12.7 3.9l.5.9c-1.3.7-2 1.7-2.1 2.9h1.5c.5 0 .9.4.9.9v2.6c0 .5-.4.9-.9.9H9.8c-.5 0-.9-.4-.9-.9V9.6Z"/></svg></span>
   引用到笔记
 </button>
+<button id="btnTranslate" type="button" title="用浏览器内置翻译把选中的英文翻成中文">
+  <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 3.4h6.4M5 1.8v1.6M3.3 3.4c.5 2.2 1.9 3.9 3.9 4.9M6.7 3.4C6.2 5.8 4.6 7.6 2.3 8.8M8.6 14.2l2.7-6.4 2.7 6.4M9.5 12.2h3.6"/></svg></span>
+  翻译
+</button>
+</div>
 
 <div class="toasts" id="toasts"></div>
 
@@ -491,6 +546,7 @@ function h(tag, props, children) {
 const ICONS = {
   grip: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="6" cy="3.5" r="1.25"/><circle cx="10" cy="3.5" r="1.25"/><circle cx="6" cy="8" r="1.25"/><circle cx="10" cy="8" r="1.25"/><circle cx="6" cy="12.5" r="1.25"/><circle cx="10" cy="12.5" r="1.25"/></svg>',
   trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 4.3h10.4M6.2 4.3V2.8h3.6v1.5M4.3 4.3l.6 8.9h6.2l.6-8.9"/></svg>',
+  translate: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 3.4h6.4M5 1.8v1.6M3.3 3.4c.5 2.2 1.9 3.9 3.9 4.9M6.7 3.4C6.2 5.8 4.6 7.6 2.3 8.8M8.6 14.2l2.7-6.4 2.7 6.4M9.5 12.2h3.6"/></svg>',
   jump: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h-3v9h9v-3M9.5 2.5h4v4M13.5 2.5 7.5 8.5"/></svg>',
 };
 function icon(name) { const s = document.createElement('span'); s.className = 'ico'; s.innerHTML = ICONS[name]; return s; }
@@ -611,7 +667,13 @@ const notesEmpty = $('#notesEmpty');
 const notesTitle = $('#notesTitle');
 const saveStateEl = $('#saveState');
 const addTail = $('#addTail');
-const quoteFab = $('#quoteFab');
+const selBar = $('#selBar');
+const btnTranslate = $('#btnTranslate');
+const transPop = $('#transPop');
+const tpBody = $('#tpBody');
+const tpQuote = $('#tpQuote');
+const tpCopy = $('#tpCopy');
+const tpAuto = $('#tpAuto');
 const fileInput = $('#fileInput');
 const jsonInput = $('#jsonInput');
 const pageInput = $('#pageInput');
@@ -748,6 +810,7 @@ async function openPdf(blob, fileName, { fromLibrary = false } = {}) {
 function closeDoc() {
   setCapture(false);
   hideFab();
+  closeTransPop();
   if (io) { io.disconnect(); io = null; }
   for (const ps of S.pages) { try { ps.task?.cancel(); } catch (e) { /* ignore */ } }
   S.pages = [];
@@ -894,13 +957,14 @@ function setScale(v, { keepFit = false } = {}) {
   v = clamp(v, 0.3, 5);
   btnFit.setAttribute('aria-pressed', String(S.fit));
   if (!S.pages.length || Math.abs(v - S.scale) < 1e-3) { S.scale = S.pages.length ? S.scale : v; updateZoomLabel(); return; }
+  closeTransPop();
   const a = captureAnchor();
   S.scale = v;
   applyScale();
   restoreAnchor(a);
   updateZoomLabel();
   scheduleRerender();
-  if (!quoteFab.hidden) showFab();
+  if (!selBar.hidden) showFab();
 }
 function fitWidth() {
   if (!S.pages.length) return;
@@ -981,10 +1045,198 @@ function captureSelection() {
   return { text, rects, page: rects.length ? rects[0].p : pageIndexOf(range.startContainer) };
 }
 
-function addQuote(q, index) {
-  if (!S.paper || !q) return;
-  insertBlock({ id: uid(), type: 'quote', text: q.text, note: '', page: q.page, rects: q.rects }, index);
+function addQuote(q, index, { translation = '', skipAuto = false } = {}) {
+  if (!S.paper || !q) return null;
+  const b = { id: uid(), type: 'quote', text: q.text, note: '', page: q.page, rects: q.rects };
+  if (translation) b.translation = translation;
+  insertBlock(b, index);
   toast(`已引用第 ${q.page + 1} 页`);
+  if (!translation && !skipAuto && TR.supported && prefs.get('autoTranslate', false) && !isMostlyChinese(q.text)) translateBlock(b);
+  return b;
+}
+
+/* ================= 翻译（浏览器内置 Translator API，在本机运行） ================= */
+const TR = { supported: typeof self !== 'undefined' && 'Translator' in self, translator: null, creating: null, listeners: new Set() };
+const TR_OPTS = { sourceLanguage: 'en', targetLanguage: 'zh' };
+const translatingIds = new Map();   // 正在翻译的引用块 id → 状态文字
+
+class TranslateError extends Error {
+  constructor(code) { super(code); this.code = code; }
+}
+
+// 浏览器的模型服务偶尔会卡住不响应；超时后报错，而不是让界面一直停在「正在翻译」
+function withWatchdog(promise, ms, onKick) {
+  return new Promise((resolve, reject) => {
+    let timer = 0;
+    const arm = () => { clearTimeout(timer); timer = setTimeout(() => reject(new TranslateError('stalled')), ms); };
+    arm();
+    if (onKick) onKick(arm);   // 每收到一次下载进度就重新计时
+    promise.then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+  });
+}
+
+function getTranslator(onProgress) {
+  if (!TR.supported) return Promise.reject(new TranslateError('unsupported'));
+  if (TR.translator) return Promise.resolve(TR.translator);
+  if (onProgress) TR.listeners.add(onProgress);
+  if (!TR.creating) {
+    TR.creating = (async () => {
+      const availability = await withWatchdog(self.Translator.availability(TR_OPTS), 10000);
+      if (availability === 'unavailable') throw new TranslateError('unavailable');
+      let kick = null;
+      const t = await withWatchdog(self.Translator.create({
+        ...TR_OPTS,
+        monitor(m) {
+          m.addEventListener('downloadprogress', e => {
+            if (kick) kick();
+            for (const fn of TR.listeners) fn(e.loaded);
+          });
+        },
+      }), 30000, k => { kick = k; });
+      TR.translator = t;
+      return t;
+    })().finally(() => { TR.creating = null; TR.listeners.clear(); });
+  }
+  return TR.creating;
+}
+
+// 太长的文字按句子切成几段分别翻译，避免超出模型的单次输入限制
+function splitForTranslation(text, max = 900) {
+  if (text.length <= max) return [text];
+  const chunks = [];
+  let cur = '';
+  for (const sentence of text.split(/(?<=[.!?;。！？；])\s+/)) {
+    const piece = sentence.trim();
+    if (!piece) continue;
+    if (cur && cur.length + 1 + piece.length > max) { chunks.push(cur); cur = ''; }
+    if (piece.length > max) {
+      for (let i = 0; i < piece.length; i += max) chunks.push(piece.slice(i, i + max));
+      continue;
+    }
+    cur = cur ? cur + ' ' + piece : piece;
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
+async function translateText(text, onProgress) {
+  const t = await getTranslator(onProgress);
+  const out = [];
+  for (const chunk of splitForTranslation(text)) out.push(await withWatchdog(t.translate(chunk), 45000));
+  return out.join('').trim();
+}
+
+function isMostlyChinese(text) {
+  const cjk = (text.match(/[\u3400-\u9fff]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  return cjk > latin;
+}
+
+function translateErrorMessage(e) {
+  const code = e && (e.code || e.name);
+  if (code === 'unsupported') return '这个浏览器不支持内置翻译。请使用桌面版 Chrome（138 或更新）或 Edge（148 或更新）。';
+  if (code === 'unavailable' || code === 'NotSupportedError') return '这台设备上用不了英译中模型，可能是硬件或系统达不到浏览器的要求。';
+  if (code === 'NotAllowedError') return '第一次使用需要下载翻译模型，请再点一次「翻译」开始下载。';
+  if (code === 'QuotaExceededError') return '选中的文字太长了，请分几段翻译。';
+  if (code === 'NetworkError') return '翻译模型下载失败，请检查网络后重试。';
+  if (code === 'stalled') return '浏览器的翻译模型没有响应。请稍后再试；如果一直这样，可以重启浏览器，或检查网络（第一次使用需要下载模型）。';
+  return '翻译失败：' + ((e && e.message) || '未知错误');
+}
+const progressText = p => `正在下载翻译模型（只需下载一次）… ${Math.round(clamp(p || 0, 0, 1) * 100)}%`;
+
+// 选区旁的翻译浮层
+let tp = null;   // { q, translation, token }
+function setTpBody(kind, text) {
+  tpBody.textContent = text;
+  tpBody.className = 'tp-body' + (kind === 'muted' ? ' is-muted' : kind === 'error' ? ' is-error' : '');
+}
+function closeTransPop() {
+  if (transPop.hidden) return;
+  transPop.hidden = true;
+  tp = null;
+}
+function placeTransPop(first, last) {
+  transPop.hidden = false;
+  const sr = pdfScroller.getBoundingClientRect();
+  const w = transPop.offsetWidth;
+  const minLeft = pdfScroller.scrollLeft + 12;
+  const maxLeft = pdfScroller.scrollLeft + pdfScroller.clientWidth - w - 12;
+  transPop.style.left = `${clamp(first.left - sr.left + pdfScroller.scrollLeft, minLeft, Math.max(minLeft, maxLeft))}px`;
+  transPop.style.top = `${last.bottom - sr.top + pdfScroller.scrollTop + 10}px`;
+}
+const revealTransPop = () => { if (!transPop.hidden) transPop.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: smooth() }); };
+
+async function openTranslate() {
+  if (!TR.supported) { toast(translateErrorMessage(new TranslateError('unsupported')), { type: 'error', ms: 6000 }); return; }
+  const sel = getSelection();
+  const q = captureSelection();
+  if (!q) return;
+  if (isMostlyChinese(q.text)) { toast('这段文字看起来已经是中文了。'); return; }
+  const range = sel.getRangeAt(0);
+  const rects = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0 && r.height < 160);
+  const box = range.getBoundingClientRect();
+  hideFab();
+  const token = {};
+  tp = { q, translation: '', token };
+  tpAuto.checked = !!prefs.get('autoTranslate', false);
+  tpQuote.disabled = true;
+  tpCopy.disabled = true;
+  setTpBody('muted', '正在翻译…');
+  placeTransPop(rects[0] || box, rects[rects.length - 1] || box);
+  revealTransPop();
+  try {
+    const zh = await translateText(q.text, p => { if (tp && tp.token === token) setTpBody('muted', progressText(p)); });
+    if (!tp || tp.token !== token) return;
+    tp.translation = zh;
+    setTpBody(zh ? 'ok' : 'error', zh || '没有得到译文，请换一段文字再试。');
+    tpCopy.disabled = !zh;
+  } catch (e) {
+    if (!tp || tp.token !== token) return;
+    console.warn(e);
+    setTpBody('error', translateErrorMessage(e));
+  }
+  tpQuote.disabled = false;
+  revealTransPop();
+}
+
+// 给笔记里的引用块翻译
+function syncTrans(el, b) {
+  const wrap = el && el.querySelector('.q-trans');
+  if (!wrap) return;
+  const ta = wrap.querySelector('.f-trans');
+  const st = wrap.querySelector('.q-trans-status');
+  const btn = el.querySelector('.q-tr-btn');
+  const busy = translatingIds.get(b.id);
+  const has = typeof b.translation === 'string';
+  wrap.hidden = !has && !busy;
+  ta.hidden = !has;
+  if (document.activeElement !== ta) ta.value = b.translation || '';
+  st.hidden = !busy;
+  st.textContent = busy || '';
+  if (btn) btn.hidden = has || !!busy;
+  if (has && ta.isConnected) autosize(ta);
+}
+function updateQuoteTrans(b) { syncTrans(notesList.querySelector(`.blk[data-id="${b.id}"]`), b); }
+
+async function translateBlock(b) {
+  if (translatingIds.has(b.id)) return;
+  if (!TR.supported) { toast(translateErrorMessage(new TranslateError('unsupported')), { type: 'error', ms: 6000 }); return; }
+  if (!(b.text || '').trim()) return;
+  if (isMostlyChinese(b.text)) { toast('这段引用看起来已经是中文了。'); return; }
+  translatingIds.set(b.id, '正在翻译…');
+  updateQuoteTrans(b);
+  try {
+    const zh = await translateText(b.text, p => { translatingIds.set(b.id, progressText(p)); updateQuoteTrans(b); });
+    if (!S.paper || !S.paper.blocks.includes(b)) return;
+    if (zh) { b.translation = zh; touch(); }
+    else toast('没有得到译文，请稍后再试。');
+  } catch (e) {
+    console.warn(e);
+    toast(translateErrorMessage(e), { type: 'error', ms: 6000 });
+  } finally {
+    translatingIds.delete(b.id);
+    updateQuoteTrans(b);
+  }
 }
 
 let pointerDownInPdf = false;
@@ -997,16 +1249,16 @@ function showFab() {
   const last = rects[rects.length - 1] || range.getBoundingClientRect();
   const first = rects[0] || last;
   const box = pdfScroller.getBoundingClientRect();
-  if (last.bottom < box.top || first.top > box.bottom) { quoteFab.hidden = true; return; }
-  quoteFab.hidden = false;
-  const fw = quoteFab.offsetWidth, fh = quoteFab.offsetHeight;
+  if (last.bottom < box.top || first.top > box.bottom) { selBar.hidden = true; return; }
+  selBar.hidden = false;
+  const fw = selBar.offsetWidth, fh = selBar.offsetHeight;
   let top = last.bottom + 8;
   if (top + fh > box.bottom - 8) top = first.top - fh - 8;
   const left = clamp(last.right - fw / 2, box.left + 8, box.right - fw - 8);
-  quoteFab.style.left = `${left}px`;
-  quoteFab.style.top = `${clamp(top, box.top + 8, box.bottom - fh - 8)}px`;
+  selBar.style.left = `${left}px`;
+  selBar.style.top = `${clamp(top, box.top + 8, box.bottom - fh - 8)}px`;
 }
-function hideFab() { quoteFab.hidden = true; }
+function hideFab() { selBar.hidden = true; }
 
 /* ================= 框选截图 ================= */
 function setCapture(on) {
@@ -1015,7 +1267,7 @@ function setCapture(on) {
   btnCapture.setAttribute('aria-pressed', String(on));
   pdfPane.classList.toggle('capturing', on);
   captureHint.hidden = !on;
-  if (on) { getSelection()?.removeAllRanges(); hideFab(); }
+  if (on) { getSelection()?.removeAllRanges(); hideFab(); closeTransPop(); }
 }
 
 async function renderRegion(pageIndex, region) {
@@ -1169,16 +1421,27 @@ function blockEl(b) {
   } else if (b.type === 'quote') {
     const q = h('textarea', { class: 'f-quote', rows: '1', 'aria-label': '引用的原文', value: b.text || '' });
     q.addEventListener('input', () => { b.text = q.value; autosize(q); touch(); });
+    const tr = h('textarea', { class: 'f-trans', rows: '1', placeholder: '中文译文（清空后可重新翻译）', 'aria-label': '中文译文', value: b.translation || '' });
+    tr.addEventListener('input', () => { b.translation = tr.value; autosize(tr); touch(); });
+    tr.addEventListener('blur', () => {
+      if (typeof b.translation === 'string' && !b.translation.trim()) { delete b.translation; touch(); updateQuoteTrans(b); }
+    });
+    const trWrap = h('div', { class: 'q-trans' }, [tr, h('div', { class: 'q-trans-status' })]);
+    const trBtn = TR.supported
+      ? h('button', { class: 'q-tr-btn', type: 'button', title: '用浏览器内置翻译把这段翻成中文', onclick: () => translateBlock(b) }, [icon('translate'), '翻译'])
+      : null;
     const note = h('textarea', { class: 'f-note', rows: '1', placeholder: '添加批注…', 'aria-label': '批注', value: b.note || '' });
     note.addEventListener('input', () => { b.note = note.value; autosize(note); touch(); });
-    body = h('div', { class: 'quote' }, [q, h('div', { class: 'quote-foot' }, srcTag(b)), note]);
+    body = h('div', { class: 'quote' }, [q, trWrap, h('div', { class: 'quote-foot' }, [srcTag(b), trBtn]), note]);
   } else {
     const img = h('img', { src: b.src, alt: b.caption || '笔记图片', loading: 'lazy', onclick: () => openLightbox(b.src) });
     const cap = h('input', { class: 'f-cap', placeholder: '添加图注…', 'aria-label': '图注', value: b.caption || '' });
     cap.addEventListener('input', () => { b.caption = cap.value; img.alt = cap.value || '笔记图片'; touch(); });
     body = h('figure', { class: 'figure' }, [img, h('figcaption', null, [cap, srcTag(b)])]);
   }
-  return h('div', { class: `blk blk-${b.type}`, dataset: { id: b.id } }, [handle, body, del]);
+  const el = h('div', { class: `blk blk-${b.type}`, dataset: { id: b.id } }, [handle, body, del]);
+  if (b.type === 'quote') syncTrans(el, b);
+  return el;
 }
 
 function renderHeader() {
@@ -1402,6 +1665,7 @@ function buildMarkdown(mode) {
       if ((b.text || '').trim()) out.push(b.text.replace(/\s+$/, ''), '');
     } else if (b.type === 'quote') {
       out.push(...(b.text || '').split('\n').map(l => '> ' + l));
+      if ((b.translation || '').trim()) out.push('>', ...b.translation.trim().split('\n').map((l, i) => '> ' + (i === 0 ? '译文：' : '') + l));
       const src = sourceOf(b);
       if (src) out.push('>', `> （第 ${src.p + 1} 页）`);
       out.push('');
@@ -1427,7 +1691,7 @@ function buildHtml() {
     if (b.type === 'text') return (b.text || '').trim() ? `<div class="t">${esc(b.text)}</div>` : '';
     if (b.type === 'quote') {
       const src = sourceOf(b);
-      return `<blockquote><div class="q">${esc(b.text)}</div>${src ? `<div class="src">第 ${src.p + 1} 页</div>` : ''}</blockquote>`
+      return `<blockquote><div class="q">${esc(b.text)}</div>${(b.translation || '').trim() ? `<div class="tr">${esc(b.translation.trim())}</div>` : ''}${src ? `<div class="src">第 ${src.p + 1} 页</div>` : ''}</blockquote>`
         + ((b.note || '').trim() ? `<div class="t note">${esc(b.note)}</div>` : '');
     }
     const cap = [(b.caption || '').trim(), Number.isInteger(b.page) ? `第 ${b.page + 1} 页` : ''].filter(Boolean).join('，');
@@ -1445,6 +1709,7 @@ h1{font:600 26px/1.35 "Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,
 .note{margin-top:-6px}
 blockquote{margin:0 0 18px;padding:2px 0 2px 16px;border-left:4px solid #ffd43b}
 .q{white-space:pre-wrap;font:15.5px/1.85 "Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,serif}
+.tr{white-space:pre-wrap;color:#5d646d;margin-top:4px}
 .src{color:#2756a8;font-size:12.5px;margin-top:2px}
 figure{margin:0 0 22px}
 img{display:block;max-width:100%;border:1px solid #e2e2dc;border-radius:4px}
@@ -1495,7 +1760,9 @@ function sanitizeBlock(b, sameDoc) {
   if (b.type === 'text') return { id, type: 'text', text: String(b.text ?? '') };
   if (b.type === 'quote') {
     const rects = sameDoc && Array.isArray(b.rects) ? b.rects.filter(r => okRect(r) && okPage(r.p)).slice(0, 400) : [];
-    return { id, type: 'quote', text: String(b.text ?? ''), note: String(b.note ?? ''), page: okPage(b.page) ? b.page : null, rects };
+    const out = { id, type: 'quote', text: String(b.text ?? ''), note: String(b.note ?? ''), page: okPage(b.page) ? b.page : null, rects };
+    if (typeof b.translation === 'string' && b.translation.trim()) out.translation = b.translation;
+    return out;
   }
   if (b.type === 'image' && typeof b.src === 'string' && /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/i.test(b.src)) {
     return { id, type: 'image', src: b.src, caption: String(b.caption ?? ''), page: okPage(b.page) ? b.page : null, region: okPage(b.page) && okRect(b.region) ? b.region : null };
@@ -1733,7 +2000,7 @@ function bindUI() {
     scrollRaf = requestAnimationFrame(() => {
       scrollRaf = 0;
       updateCurrentPage();
-      if (!quoteFab.hidden) showFab();
+      if (!selBar.hidden) showFab();
     });
   });
   pageInput.addEventListener('keydown', e => {
@@ -1752,8 +2019,10 @@ function bindUI() {
 
   // 选文浮动按钮
   pdfScroller.addEventListener('pointerdown', e => {
+    if (transPop.contains(e.target)) return;
     pointerDownInPdf = true;
-    if (!e.target.closest('.quote-fab')) hideFab();
+    hideFab();
+    closeTransPop();
   });
   document.addEventListener('pointerup', () => {
     if (!pointerDownInPdf) return;
@@ -1767,13 +2036,34 @@ function bindUI() {
     clearTimeout(selTimer);
     selTimer = setTimeout(() => { if (!pointerDownInPdf) showFab(); }, 250);
   });
-  quoteFab.addEventListener('pointerdown', e => e.preventDefault());
-  quoteFab.addEventListener('mousedown', e => e.preventDefault());
-  quoteFab.addEventListener('click', () => {
+  selBar.addEventListener('pointerdown', e => e.preventDefault());
+  selBar.addEventListener('mousedown', e => e.preventDefault());
+  $('#btnQuote').addEventListener('click', () => {
     const q = captureSelection();
     if (q) addQuote(q);
     getSelection()?.removeAllRanges();
     hideFab();
+  });
+  if (!TR.supported) {
+    btnTranslate.classList.add('is-off');
+    btnTranslate.title = '这个浏览器不支持内置翻译（需要桌面版 Chrome 138+ 或 Edge 148+）';
+  }
+  btnTranslate.addEventListener('click', openTranslate);
+
+  // 翻译浮层
+  $('#tpClose').addEventListener('click', closeTransPop);
+  tpAuto.addEventListener('change', () => prefs.set('autoTranslate', tpAuto.checked));
+  tpCopy.addEventListener('click', async () => {
+    if (!tp || !tp.translation) return;
+    try { await navigator.clipboard.writeText(tp.translation); toast('已复制译文'); }
+    catch (e) { toast('复制失败，可以直接选中译文手动复制。', { type: 'error' }); }
+  });
+  tpQuote.addEventListener('click', () => {
+    if (!tp) return;
+    const { q, translation } = tp;
+    closeTransPop();
+    addQuote(q, undefined, { translation, skipAuto: true });
+    getSelection()?.removeAllRanges();
   });
 
   // 文字层选区优化（同 pdf.js 官方查看器）
@@ -1888,6 +2178,7 @@ function bindUI() {
       if (!exportMenu.hidden) { closeMenu(); btnExport.focus(); }
       if (S.capture) setCapture(false);
       hideFab();
+      closeTransPop();
     }
   });
 
