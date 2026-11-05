@@ -334,6 +334,26 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
 .lib-item.is-current .lib-title::after { content: "正在阅读"; margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: var(--marker); color: var(--marker-ink); font-size: 11px; font-weight: 600; vertical-align: 1px; }
 .lib-meta { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lib-empty { margin: 8px 22px 22px; color: var(--ink-2); }
+.lib-item.is-remote .lib-title::after { content: "GitHub"; margin-left: 8px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line-strong); color: var(--ink-2); font-size: 11px; font-weight: 600; vertical-align: 1px; }
+.lib-loading { margin: 0 22px 14px; font-size: 13px; color: var(--ink-3); }
+
+/* ---------- GitHub 同步 ---------- */
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; border: 1.5px solid var(--ink-3); }
+#btnSync[data-state="idle"] .sync-dot { background: #2f9e44; border-color: #2f9e44; }
+#btnSync[data-state="busy"] .sync-dot { background: var(--marker-edge); border-color: var(--marker-edge); animation: sync-pulse .8s infinite alternate; }
+#btnSync[data-state="error"] .sync-dot { background: #c2412f; border-color: #c2412f; }
+#btnSync[data-state="offline"] .sync-dot { background: var(--ink-3); }
+@keyframes sync-pulse { to { opacity: .3; } }
+.sync-form { display: grid; gap: 12px; padding: 2px 22px 20px; }
+.sync-form ol { margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.7; color: var(--ink-2); }
+.sync-form a { color: var(--link); }
+.sync-form code { font-size: 12px; padding: 0 4px; border-radius: 4px; background: var(--sheet-2); }
+.sync-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+.sync-form input { height: 34px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--sheet); color: var(--ink); font: inherit; font-weight: 400; }
+.sync-form small { font-weight: 400; color: var(--ink-3); }
+.sync-status { margin: 0; min-height: 1.4em; font-size: 13px; color: var(--ink-2); }
+.sync-status.is-error { color: #c2412f; }
+.sync-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .lightbox { width: auto; max-width: 94vw; background: transparent; box-shadow: none; overflow: visible; }
 .lightbox img { display: block; max-width: 94vw; max-height: 90vh; border-radius: 6px; background: #fff; cursor: zoom-out; }
 
@@ -369,6 +389,7 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
   </div>
   <button class="btn primary" id="btnOpen" type="button">打开 PDF</button>
   <button class="btn" id="btnLibrary" type="button">论文库</button>
+  <button class="btn" id="btnSync" type="button" data-state="off" aria-label="GitHub 同步" title="未开启 GitHub 同步"><span class="sync-dot"></span><span class="hide-narrow">同步</span></button>
   <div class="doc-name" id="docName"></div>
   <div class="doc-spacer"></div>
   <div class="menu-wrap">
@@ -439,7 +460,7 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
           <h2>把论文 PDF 拖到这里</h2>
           <p>或者</p>
           <button class="btn primary" id="btnOpen2" type="button">选择 PDF 文件</button>
-          <p class="drop-note">文件只在你的浏览器里处理，不会上传到任何服务器。</p>
+          <p class="drop-note" id="dropNote">文件只在你的浏览器里处理，不会上传到任何服务器。</p>
           <button class="linklike" id="libHint" type="button" hidden></button>
         </div>
       </div>
@@ -507,9 +528,35 @@ dialog::backdrop { background: rgba(18, 20, 24, .5); }
       <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></span>
     </button>
   </div>
-  <p class="modal-sub">论文和笔记都只保存在这个浏览器里。换电脑或清除浏览器数据前，请先用「导出笔记」备份。</p>
+  <p class="modal-sub" id="libSub">论文和笔记都只保存在这个浏览器里。换电脑或清除浏览器数据前，请先用「导出笔记」备份，或者开启「同步」。</p>
   <ul class="lib-list" id="libList"></ul>
   <p class="lib-empty" id="libEmpty" hidden>还没有保存过论文。打开一篇 PDF 就会自动加入这里。</p>
+  <p class="lib-loading" id="libLoading" hidden>正在读取 GitHub 上的论文…</p>
+</dialog>
+
+<dialog id="syncModal" aria-labelledby="syncTitle">
+  <div class="modal-head">
+    <h2 id="syncTitle">GitHub 同步</h2>
+    <button class="icon-btn" type="button" data-close aria-label="关闭">
+      <span class="ico"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></span>
+    </button>
+  </div>
+  <p class="modal-sub">把论文 PDF 和笔记自动存到你自己的 GitHub 私有仓库。在别的电脑上填同样的设置，就能在「论文库」里接着读。</p>
+  <form class="sync-form" id="syncForm" autocomplete="off">
+    <ol>
+      <li>在 GitHub 上新建一个<strong>私有（Private）</strong>仓库，比如 <code>Paper_Note_data</code>。</li>
+      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">新建一个 Fine-grained 访问令牌</a>：Repository access 选 Only select repositories，只勾这个仓库；Permissions 里把 Contents 设为 Read and write。</li>
+      <li>把仓库名和令牌填在下面。每台电脑都要填一次。</li>
+    </ol>
+    <label>仓库<input id="syncRepo" placeholder="用户名/仓库名，例如 sikong206573/Paper_Note_data" spellcheck="false"></label>
+    <label>访问令牌<input id="syncToken" type="password" placeholder="github_pat_…" spellcheck="false"><small>令牌只保存在这个浏览器里，只会发给 api.github.com。</small></label>
+    <p class="sync-status" id="syncStatus" aria-live="polite"></p>
+    <div class="sync-actions">
+      <button class="btn ghost danger" id="syncOff" type="button" hidden>关闭同步</button>
+      <button class="btn" id="syncNow" type="button" hidden>立即同步</button>
+      <button class="btn primary" id="syncSave" type="submit">保存并连接</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog class="lightbox" id="lightbox" aria-label="查看图片"><img alt=""></dialog>
@@ -800,6 +847,7 @@ async function openPdf(blob, fileName, { fromLibrary = false } = {}) {
     renderNotes();
     updateLibHint();
     if (restored) toast(`已恢复这篇论文的 ${restored} 条笔记`);
+    if (S.dbOk) Sync.opened(id);
   } catch (e) {
     console.error(e);
     setPdfStatus('idle');
@@ -1568,6 +1616,7 @@ async function flushSave() {
   try {
     await DB.put('papers', S.paper);
     if (!dirty) setSaveState('saved');
+    Sync.changed();
   } catch (e) {
     dirty = true;
     storageProblem(e);
@@ -1618,6 +1667,44 @@ async function openLibrary() {
   ])));
   $('#libEmpty').hidden = all.length > 0;
   if (!libModal.open) libModal.showModal();
+  if (Sync.enabled()) addRemoteItems(new Set(all.map(r => r.id)));
+}
+let libRemoteSeq = 0;
+async function addRemoteItems(localIds) {
+  const seq = ++libRemoteSeq;
+  const loading = $('#libLoading');
+  loading.hidden = false;
+  loading.textContent = '正在读取 GitHub 上的论文…';
+  let list;
+  try { list = await Sync.remoteList(); }
+  catch (e) {
+    if (seq === libRemoteSeq) loading.textContent = '读取 GitHub 上的论文失败：' + (e.message || e);
+    return;
+  }
+  if (seq !== libRemoteSeq || !libModal.open) return;
+  loading.hidden = true;
+  const extra = list.filter(e => !localIds.has(e.id)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (!extra.length) return;
+  $('#libEmpty').hidden = true;
+  $('#libList').append(...extra.map(e => h('li', { class: 'lib-item is-remote' }, [
+    h('button', { class: 'lib-open', type: 'button', onclick: () => openRemote(e) }, [
+      h('span', { class: 'lib-title', text: e.title || e.fileName }),
+      h('span', { class: 'lib-meta', text: `${e.count || 0} 条笔记，${fmtTime(e.updatedAt)} 更新，${e.pdf ? '点一下下载' : '云端没有 PDF，需要自己打开文件'}` }),
+    ]),
+  ])));
+}
+async function openRemote(entry) {
+  libModal.close();
+  toast(`正在从 GitHub 下载「${entry.title || entry.fileName}」…`);
+  try {
+    const { rec, blob } = await Sync.download(entry);
+    updateLibHint();
+    if (blob) await openPdf(blob, rec.fileName, { fromLibrary: true });
+    else toast(`笔记已下载。GitHub 上没有这篇的 PDF，请打开「${rec.fileName}」，笔记会自动出现。`, { ms: 7000 });
+  } catch (e) {
+    console.warn(e);
+    toast('下载失败：' + (e.message || e), { type: 'error', ms: 6000 });
+  }
 }
 async function openFromLibrary(id) {
   libModal.close();
@@ -1630,10 +1717,14 @@ async function openFromLibrary(id) {
   } catch (e) { storageProblem(e); }
 }
 async function removeFromLibrary(rec) {
-  if (!confirm(`删除「${rec.title || rec.fileName}」和它的 ${(rec.blocks || []).length} 条笔记？删除后无法恢复。`)) return;
+  const q = Sync.enabled()
+    ? `从这台设备上删除「${rec.title || rec.fileName}」和它的 ${(rec.blocks || []).length} 条笔记？\nGitHub 上的副本会保留，之后还能在论文库里重新下载。`
+    : `删除「${rec.title || rec.fileName}」和它的 ${(rec.blocks || []).length} 条笔记？删除后无法恢复。`;
+  if (!confirm(q)) return;
   try {
     await DB.del('papers', rec.id);
     await DB.del('files', rec.id);
+    await Sync.forget(rec.id);
     if (rec.id === S.paper?.id) {
       dirty = false;
       closeDoc();
@@ -1645,6 +1736,454 @@ async function removeFromLibrary(rec) {
   await updateLibHint();
   openLibrary();
 }
+
+/* ================= GitHub 同步 =================
+   云端布局（私有仓库，默认分支）：
+     papers/<key>.json  一篇论文的全部笔记（含截图）
+     pdfs/<key>.pdf     论文 PDF（不超过 PDF_MAX）
+     index.json         论文列表，供其他设备的「论文库」使用
+   每篇论文在本地 kv 里记一份同步状态 sync:<id>，保存上次同步时的版本（sha 和每条笔记的指纹），
+   两台设备都改过时按笔记逐条合并。 */
+const Sync = (() => {
+  const API = 'https://api.github.com';
+  const PDF_MAX = 40 * 1024 * 1024;
+  const PUSH_DELAY = 6000;
+  let cfg = prefs.get('sync', null);                 // { repo, token }
+  if (!cfg || typeof cfg.repo !== 'string' || typeof cfg.token !== 'string') cfg = null;
+  let state = 'off', message = '';
+  let timer = 0, running = false, again = false, lastPull = 0;
+  const queue = new Set();
+  const warned = new Set();
+
+  class GhError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+  /* ---------- 小工具 ---------- */
+  function hashStr(str) {   // cyrb53，只用来判断内容有没有变
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+  }
+  const blockHash = b => hashStr(JSON.stringify(b));
+  const docHash = r => hashStr(JSON.stringify({ t: r.title || '', b: r.blocks || [] }));
+  const baseOf = blocks => Object.fromEntries(blocks.map(b => [b.id, blockHash(b)]));
+
+  async function keyOf(id) {
+    if (/^[A-Za-z0-9_-]{8,80}$/.test(id)) return id;
+    const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(id)));
+    return 'h' + [...d.slice(0, 20)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  function blobToB64(blob) {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => { const s = String(fr.result); resolve(s.slice(s.indexOf(',') + 1)); };
+      fr.onerror = () => reject(fr.error);
+      fr.readAsDataURL(blob);
+    });
+  }
+  function b64ToText(b64) {
+    const bin = atob(b64.replace(/\s+/g, ''));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  /* ---------- GitHub API ---------- */
+  async function gh(method, path, body, { raw = false, conf = cfg } = {}) {
+    const headers = { Authorization: 'Bearer ' + conf.token, Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    if (body) headers['Content-Type'] = 'application/json';
+    try {
+      return await fetch(API + path, { method, headers, cache: 'no-store', body: body ? JSON.stringify(body) : undefined });
+    } catch (e) {
+      throw new GhError(0, navigator.onLine === false ? '网络断开了' : '连不上 GitHub');
+    }
+  }
+  async function check(res) {
+    if (res.ok) return res;
+    let detail = '';
+    try { detail = (await res.json()).message || ''; } catch (e) { /* 不是 JSON */ }
+    const s = res.status;
+    if (s === 401) throw new GhError(s, '令牌无效或已过期，请在「同步」里重新填写。');
+    if (s === 403 && res.headers.get('x-ratelimit-remaining') === '0') throw new GhError(s, '请求太频繁，被 GitHub 暂时限制了，稍后会自动重试。');
+    if (s === 403) throw new GhError(s, '令牌没有写入这个仓库的权限（Contents 需要设为 Read and write）。');
+    if (s === 404) throw new GhError(s, '找不到这个仓库，或者令牌没有访问它的权限。');
+    if (s === 409 || s === 422) throw new GhError(409, '和其他设备的修改冲突了');
+    throw new GhError(s, `GitHub 返回错误 ${s}${detail ? '：' + detail : ''}`);
+  }
+  const cpath = p => `/repos/${cfg.repo}/contents/${p.split('/').map(encodeURIComponent).join('/')}`;
+
+  async function getMeta(path) {            // 文件不存在（或仓库还是空的）时返回 null
+    const res = await gh('GET', cpath(path));
+    if (res.status === 404) {
+      const d = await res.json().catch(() => ({}));
+      if (/not found|empty/i.test(d.message || '')) return null;
+    }
+    await check(res);
+    const meta = await res.json();
+    if (Array.isArray(meta) || meta.type !== 'file') throw new GhError(500, `云端的 ${path} 不是文件`);
+    return meta;
+  }
+  async function getText(path) {
+    const meta = await getMeta(path);
+    if (!meta) return null;
+    if (meta.encoding === 'base64' && meta.content) return { sha: meta.sha, text: b64ToText(meta.content) };
+    const res = await check(await gh('GET', cpath(path), null, { raw: true }));   // 超过 1 MB 的文件要单独取原文
+    return { sha: meta.sha, text: await res.text() };
+  }
+  async function getBlob(path) {
+    const meta = await getMeta(path);
+    if (!meta) return null;
+    const res = await check(await gh('GET', cpath(path), null, { raw: true }));
+    return await res.blob();
+  }
+  async function putBlob(path, blob, sha, message) {
+    const body = { message, content: await blobToB64(blob) };
+    if (sha) body.sha = sha;
+    const res = await check(await gh('PUT', cpath(path), body));
+    return (await res.json()).content.sha;
+  }
+  const putText = (path, text, sha, message) => putBlob(path, new Blob([text], { type: 'application/json' }), sha, message);
+
+  /* ---------- 同步状态 ---------- */
+  async function getState(id) {
+    const st = await DB.get('kv', 'sync:' + id);
+    return st && st.repo === cfg.repo ? st : { repo: cfg.repo };
+  }
+  const setState = (id, st) => DB.put('kv', st, 'sync:' + id);
+
+  /* ---------- 合并 ----------
+     base: 上次同步时每条笔记的指纹 {id: hash}；第一次同步时为 null（只做并集）。
+     两边都改了同一条时保留本地版本。 */
+  function mergeBlocks(local, remote, base) {
+    const L = new Map(local.map(b => [b.id, b]));
+    const R = new Map(remote.map(b => [b.id, b]));
+    const out = [];
+    for (const b of local) {
+      const r = R.get(b.id);
+      if (r) {
+        const lh = blockHash(b);
+        out.push(base && base[b.id] === lh && blockHash(r) !== lh ? r : b);
+      } else if (base && b.id in base) {
+        if (blockHash(b) !== base[b.id]) out.push(b);       // 对方删了，但这边改过：保留
+      } else out.push(b);                                    // 这边新加的
+    }
+    remote.forEach((r, i) => {
+      if (L.has(r.id)) return;
+      if (base && r.id in base && blockHash(r) === base[r.id]) return;   // 这边删了，对方没改：删
+      let pos = 0;                                            // 放在它在云端的前一条后面
+      for (let j = i - 1; j >= 0; j--) {
+        const k = out.findIndex(x => x.id === remote[j].id);
+        if (k >= 0) { pos = k + 1; break; }
+      }
+      out.splice(pos, 0, r);
+    });
+    return out;
+  }
+
+  const okImage = s => typeof s === 'string' && /^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=\s]+$/i.test(s);
+  function parseRemote(text, path) {
+    let d = null;
+    try { d = JSON.parse(text); } catch (e) { /* 下面报错 */ }
+    if (!d || d.app !== 'paper-note' || !d.paper || !Array.isArray(d.paper.blocks)) throw new GhError(500, `云端的 ${path} 不是 Paper Note 的笔记文件`);
+    const blocks = d.paper.blocks.filter(b => b && typeof b === 'object' && typeof b.id === 'string' &&
+      (b.type === 'text' || b.type === 'quote' || (b.type === 'image' && okImage(b.src))));
+    return { ...d.paper, blocks };
+  }
+  const serialize = r => JSON.stringify({
+    app: 'paper-note', version: 1, savedAt: new Date().toISOString(),
+    paper: { id: r.id, fileName: r.fileName, title: r.title, pageCount: r.pageCount || null, createdAt: r.createdAt, updatedAt: r.updatedAt, blocks: r.blocks },
+  });
+
+  /* 把合并结果放进正在打开的论文，尽量保住光标 */
+  function applyToCurrent(next) {
+    const ae = document.activeElement;
+    let restore = null;
+    if (ae && notesList.contains(ae)) {
+      const blk = ae.closest('.blk');
+      if (blk) {
+        const fields = $$('textarea, input', blk);
+        restore = { id: blk.dataset.id, i: fields.indexOf(ae), s: ae.selectionStart, e: ae.selectionEnd };
+      }
+    }
+    const top = notesScroller.scrollTop;
+    S.paper.title = next.title;
+    S.paper.blocks = next.blocks;
+    S.paper.updatedAt = next.updatedAt;
+    renderHeader();
+    renderNotes();
+    notesScroller.scrollTop = top;
+    if (restore) {
+      const blk = $$('.blk', notesList).find(el => el.dataset.id === restore.id);
+      const f = blk && $$('textarea, input', blk)[restore.i];
+      if (f) { f.focus({ preventScroll: true }); try { f.setSelectionRange(restore.s, restore.e); } catch (e) { /* 不支持选区 */ } }
+    }
+  }
+
+  /* ---------- 同步一篇论文 ---------- */
+  async function syncPaper(id) {
+    const key = await keyOf(id);
+    const path = `papers/${key}.json`;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const live = () => (S.paper && S.paper.id === id ? S.paper : null);
+      const rec = live() || await DB.get('papers', id);
+      if (!rec) return;
+      let st = await getState(id);
+      const localHash = docHash(rec);
+      const remote = await getText(path);
+      let next = rec, push = false, pulled = 0;
+
+      if (!remote) push = true;
+      else if (remote.sha === st.sha) push = localHash !== st.baseHash;
+      else {
+        const r = parseRemote(remote.text, path);
+        const title = st.baseTitle === undefined || rec.title === st.baseTitle ? (r.title || rec.title) : rec.title;
+        const blocks = st.baseHash && localHash === st.baseHash ? r.blocks : mergeBlocks(rec.blocks, r.blocks, st.base || null);
+        next = { ...rec, title, blocks, updatedAt: Math.max(rec.updatedAt || 0, r.updatedAt || 0) };
+        push = docHash(next) !== docHash(r);
+        if (docHash(next) !== localHash) {
+          if (live() && docHash(live()) !== localHash) continue;   // 同步期间又改了：重来
+          pulled = 1;
+          if (live()) applyToCurrent(next);
+          await DB.put('papers', live() || next);
+        }
+      }
+
+      let sha = remote && remote.sha;
+      if (push) {
+        try { sha = await putText(path, serialize(next), remote && remote.sha, `Notes: ${next.title || next.fileName}`); }
+        catch (e) { if (e.status === 409) continue; throw e; }
+      }
+      st = { ...st, sha, baseHash: docHash(next), base: baseOf(next.blocks), baseTitle: next.title || '' };
+      await setState(id, st);
+      if (pulled && live()) toast('已从 GitHub 同步了其他设备上的笔记');
+
+      let indexDirty = push || !st.indexed;
+      if (!st.pdf && !st.pdfSkip) {
+        const r = await uploadPdf(id, key, next);
+        if (r === 'ok') st.pdf = true; else if (r === 'skip') st.pdfSkip = true;
+        if (r) { indexDirty = true; await setState(id, st); }
+      }
+      if (indexDirty) { await updateIndex(id, key, next, st); st.indexed = true; await setState(id, st); }
+      return;
+    }
+    throw new GhError(409, '和其他设备的修改一直冲突，稍后会再试。');
+  }
+
+  async function uploadPdf(id, key, rec) {
+    const path = `pdfs/${key}.pdf`;
+    if (await getMeta(path)) return 'ok';
+    const blob = await DB.get('files', id);
+    if (!blob) return null;
+    if (blob.size > PDF_MAX) {
+      toast(`「${rec.fileName}」超过 40 MB，只同步笔记，不上传 PDF。`, { ms: 6000 });
+      return 'skip';
+    }
+    try { await putBlob(path, blob, null, `PDF: ${rec.fileName}`); }
+    catch (e) { if (e.status !== 409) throw e; }   // 另一台设备刚好也传了同一个文件
+    return 'ok';
+  }
+
+  async function updateIndex(id, key, rec, st) {
+    const entry = { key, title: rec.title || '', fileName: rec.fileName || '', updatedAt: rec.updatedAt || Date.now(), count: rec.blocks.length, pageCount: rec.pageCount || null, pdf: !!st.pdf };
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const f = await getText('index.json');
+      let idx = { app: 'paper-note', version: 1, papers: {} };
+      if (f) {
+        try { idx = JSON.parse(f.text); } catch (e) { idx = null; }
+        if (!idx || typeof idx.papers !== 'object' || !idx.papers) throw new GhError(500, '云端的 index.json 格式不对');
+      }
+      if (JSON.stringify(idx.papers[id]) === JSON.stringify(entry)) return;
+      idx.papers[id] = entry;
+      try { await putText('index.json', JSON.stringify(idx, null, 1), f && f.sha, `Index: ${entry.title || entry.fileName}`); return; }
+      catch (e) { if (e.status !== 409) throw e; }
+    }
+    throw new GhError(409, '更新论文列表时一直冲突，稍后会再试。');
+  }
+
+  /* ---------- 队列与状态 ---------- */
+  function setStatus(s, msg = '') {
+    state = s; message = msg;
+    const btn = $('#btnSync');
+    btn.dataset.state = s;
+    const text = {
+      off: '未开启 GitHub 同步', idle: `已同步到 GitHub：${cfg ? cfg.repo : ''}`, busy: '正在和 GitHub 同步…',
+      error: '同步失败：' + msg, offline: '网络断开了，联网后会自动同步',
+    }[s];
+    btn.title = text;
+    const el = $('#syncStatus');
+    if (el && syncModal.open && !el.dataset.busy) { el.textContent = s === 'off' ? '' : text; el.classList.toggle('is-error', s === 'error'); }
+  }
+  function request(id, delay = 0) {
+    if (!cfg || !id) return;
+    queue.add(id);
+    clearTimeout(timer);
+    timer = setTimeout(pump, delay);
+  }
+  async function pump() {
+    clearTimeout(timer);
+    if (!cfg || !queue.size) return;
+    if (running) { again = true; return; }
+    running = true;
+    setStatus('busy');
+    let current = null;
+    try {
+      await flushSave();
+      while (queue.size && cfg) {
+        current = queue.values().next().value;
+        queue.delete(current);
+        await syncPaper(current);
+        if (S.paper && current === S.paper.id) lastPull = Date.now();
+      }
+      warned.clear();
+      setStatus(cfg ? 'idle' : 'off');
+    } catch (e) {
+      if (current) queue.add(current);   // 下次触发时再试
+      fail(e);
+    } finally {
+      running = false;
+      if (again) { again = false; if (queue.size && state !== 'offline') setTimeout(pump, 1000); }
+    }
+  }
+  function fail(e) {
+    if (e && e.status === 0) { setStatus('offline'); return; }
+    console.warn(e);
+    const msg = (e && e.message) || String(e);
+    setStatus('error', msg);
+    if (!warned.has(msg)) {
+      warned.add(msg);
+      toast('GitHub 同步失败：' + msg, { type: 'error', ms: 8000, action: { label: '查看', fn: openDialog } });
+    }
+  }
+
+  /* ---------- 设置 ---------- */
+  function normRepo(s) {
+    return String(s || '').trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '').replace(/\/+$/, '');
+  }
+  async function connect(repoInput, tokenInput) {
+    const repo = normRepo(repoInput);
+    const token = String(tokenInput || '').trim() || (cfg && cfg.repo === repo ? cfg.token : '');
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo)) throw new Error('仓库要写成「用户名/仓库名」，例如 sikong206573/Paper_Note_data。');
+    if (!token) throw new Error('请填写访问令牌。');
+    const res = await gh('GET', `/repos/${repo}`, null, { conf: { token } });
+    await check(res);
+    const info = await res.json();
+    if (!info.private) throw new Error('这个仓库是公开的，任何人都能看到里面的笔记和 PDF。请换一个私有（Private）仓库。');
+    cfg = { repo: info.full_name || repo, token };
+    prefs.set('sync', cfg);
+    updateTexts();
+    let all = [];
+    try { all = S.dbOk ? await DB.all('papers') : []; } catch (e) { /* 读不到就只同步当前这篇 */ }
+    for (const r of all) queue.add(r.id);
+    if (S.paper) queue.add(S.paper.id);
+    setStatus('idle');
+    pump();
+    return all.length;
+  }
+  function disconnect() {
+    cfg = null;
+    queue.clear();
+    clearTimeout(timer);
+    try { localStorage.removeItem('paper-note:sync'); } catch (e) { /* 存储不可用 */ }
+    updateTexts();
+    setStatus('off');
+  }
+  function updateTexts() {
+    $('#dropNote').textContent = cfg
+      ? `已开启 GitHub 同步：论文和笔记会自动上传到你的私有仓库 ${cfg.repo}。`
+      : '文件只在你的浏览器里处理，不会上传到任何服务器。';
+    $('#libSub').textContent = cfg
+      ? `论文和笔记会自动同步到 GitHub 私有仓库 ${cfg.repo}。标着 GitHub 的是其他设备上的论文，点一下就会下载到这里。`
+      : '论文和笔记都只保存在这个浏览器里。换电脑或清除浏览器数据前，请先用「导出笔记」备份，或者开启「同步」。';
+  }
+  const syncModal = $('#syncModal');
+  function openDialog() {
+    $('#syncRepo').value = cfg ? cfg.repo : '';
+    $('#syncToken').value = '';
+    $('#syncToken').placeholder = cfg ? '已保存（不改就留空）' : 'github_pat_…';
+    $('#syncOff').hidden = !cfg;
+    $('#syncNow').hidden = !cfg;
+    const el = $('#syncStatus');
+    delete el.dataset.busy;
+    if (!syncModal.open) syncModal.showModal();
+    setStatus(state, message);
+  }
+  function bind() {
+    $('#btnSync').addEventListener('click', openDialog);
+    syncModal.addEventListener('click', e => { if (e.target === syncModal || e.target.closest('[data-close]')) syncModal.close(); });
+    $('#syncForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const el = $('#syncStatus'), btn = $('#syncSave');
+      el.dataset.busy = '1'; el.classList.remove('is-error'); el.textContent = '正在连接 GitHub…'; btn.disabled = true;
+      try {
+        const n = await connect($('#syncRepo').value, $('#syncToken').value);
+        delete el.dataset.busy;
+        syncModal.close();
+        toast(n ? `已连接 GitHub，正在上传这台设备上的 ${n} 篇论文…` : '已连接 GitHub。之后打开的论文会自动同步。', { ms: 5000 });
+      } catch (err) {
+        el.textContent = err.message || String(err);
+        el.classList.add('is-error');
+        delete el.dataset.busy;
+      } finally { btn.disabled = false; }
+    });
+    $('#syncOff').addEventListener('click', () => {
+      if (!confirm('关闭这台设备上的同步？GitHub 上已经存的论文和笔记不会删除，这台设备上的也不会删除。')) return;
+      disconnect();
+      syncModal.close();
+      toast('已关闭同步');
+    });
+    $('#syncNow').addEventListener('click', async () => {
+      try { for (const r of await DB.all('papers')) queue.add(r.id); } catch (e) { if (S.paper) queue.add(S.paper.id); }
+      pump();
+    });
+    window.addEventListener('online', () => { if (cfg && queue.size) pump(); });
+    const pull = () => { if (cfg && S.paper && document.visibilityState === 'visible' && Date.now() - lastPull > 20000) request(S.paper.id, 0); };
+    window.addEventListener('focus', pull);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') pull();
+      else if (cfg && queue.size) pump();               // 切走之前把没传完的先传上去
+    });
+  }
+  function init() { bind(); updateTexts(); setStatus(cfg ? 'idle' : 'off'); }
+
+  /* ---------- 论文库：其他设备上的论文 ---------- */
+  async function remoteList() {
+    if (!cfg) return [];
+    const f = await getText('index.json');
+    if (!f) return [];
+    let d = null;
+    try { d = JSON.parse(f.text); } catch (e) { /* 下面报错 */ }
+    if (!d || typeof d.papers !== 'object' || !d.papers) throw new GhError(500, '云端的 index.json 格式不对');
+    return Object.entries(d.papers).map(([id, v]) => ({ id, ...v }));
+  }
+  async function download(entry) {
+    const path = `papers/${entry.key}.json`;
+    const f = await getText(path);
+    if (!f) throw new GhError(404, `GitHub 上找不到「${entry.title || entry.fileName}」的笔记文件。`);
+    const r = parseRemote(f.text, path);
+    const rec = {
+      id: entry.id, fileName: r.fileName || entry.fileName || 'paper.pdf', title: r.title || entry.title || '',
+      blocks: r.blocks, createdAt: r.createdAt || Date.now(), updatedAt: r.updatedAt || Date.now(), pageCount: r.pageCount || entry.pageCount,
+    };
+    let blob = null;
+    if (entry.pdf) {
+      const b = await getBlob(`pdfs/${entry.key}.pdf`);
+      if (b) blob = new Blob([b], { type: 'application/pdf' });
+    }
+    await DB.put('papers', rec);
+    if (blob) await DB.put('files', blob, rec.id);
+    await setState(rec.id, { repo: cfg.repo, sha: f.sha, baseHash: docHash(rec), base: baseOf(rec.blocks), baseTitle: rec.title || '', pdf: !!blob, indexed: true });
+    return { rec, blob };
+  }
+
+  return {
+    init, request, remoteList, download, mergeBlocks,
+    enabled: () => !!cfg,
+    opened: id => request(id, 0),
+    changed: () => { if (S.paper) request(S.paper.id, PUSH_DELAY); },
+    forget: id => DB.del('kv', 'sync:' + id),
+  };
+})();
 
 /* ================= 导出与导入 ================= */
 function safeName(s) { return (s || 'paper-notes').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'paper-notes'; }
@@ -2199,6 +2738,9 @@ function bindUI() {
   setPdfStatus('idle');
   updateZoomLabel();
   try { await DB.open(); S.dbOk = true; } catch (e) { S.dbOk = false; console.warn('IndexedDB unavailable', e); }
+  Sync.init();
+  // 请浏览器不要在空间紧张时自动清掉这里的数据（浏览器可能不同意，不影响使用）
+  try { navigator.storage?.persist?.().catch(() => {}); } catch (e) { /* 不支持 */ }
   ensurePdfjs().catch(err => toast(err.message, { type: 'error', ms: 8000 }));
   if (S.dbOk) {
     try {
